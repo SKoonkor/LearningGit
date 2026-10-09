@@ -1,0 +1,52 @@
+\section*{Solutions to Homework 4}
+
+\begin{lstlisting}
+$ bash codeHints/L04/setup_hw4.sh
+$ cd practice/hw4
+$ git switch -c shopping
+$ echo "milk" > shopping.txt
+$ git add shopping.txt
+$ git commit -m "Add shopping list"
+$ echo "eggs" >> shopping.txt
+$ git add shopping.txt
+$ git commit -m "Add eggs"
+$ git switch main
+$ ls                          # no shopping.txt here
+README.md  app.txt
+$ echo "some notes" > notes.txt
+$ git add notes.txt
+$ git commit -m "Add notes"
+$ git branch -m experimnt experiment
+$ git branch hotfix main~1
+$ git log --oneline --graph --all --decorate
+* c6fac68 (HEAD -> main) Add notes
+| * e7fa817 (shopping) Add eggs
+| * 26c01df Add shopping list
+|/
+* 2e32674 (hotfix) Add app file
+* 0a964a7 (experiment) Initial commit
+$ printf 'branches=4\nbranch-is=pointer\n' > ../hw4_answers.txt
+\end{lstlisting}
+
+(The first two IDs, \code{0a964a7} and \code{2e32674}, are the same on your computer; the others depend on when you commit and will differ.)
+
+\textbf{4.1.} \code{git switch -c shopping} creates and enters the branch at the \code{Add app file} commit, where \code{main} is at that moment. Creating it \emph{before} the \code{Add notes} commit matters: the fork point is where the two lines of work separate.
+
+\textbf{4.2.} Both commits go onto \code{shopping} because that is the branch \code{HEAD} points at. Check with \code{git status} (first line) before each commit.
+
+\textbf{4.3.} After \code{git switch main} your files change: \code{shopping.txt} disappears from the folder. It is not lost; it lives in the commits of \code{shopping}. The \code{Add notes} commit moves \code{main} only. \code{shopping} stays where it was.
+
+\textbf{4.4.} \code{git branch -m old new} renames. The branch still points at the first commit, so the checker's ``experiment is the first commit'' test passes.
+
+\textbf{4.5.} \code{git branch hotfix main~1} creates the label at the parent of the newest \code{main} commit, which is \code{Add app file}, without switching. (\code{git switch -c} would also have created it, but you would then have to switch back.)
+
+\textbf{4.6.} The four branches are \code{experiment}, \code{hotfix}, \code{main} and \code{shopping}. The word is \textbf{pointer}; ``label'' and ``reference'' are also accepted.
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes.}
+\begin{itemize}
+  \item Making the \code{shopping} commits while still on \code{main} (forgetting to switch). The checker then finds main with too many commits. Use \code{setup\_hw4.sh --reset} and start again, watching the first line of \code{git status}.
+  \item Creating \code{shopping} \emph{after} the \code{Add notes} commit, so it forks from the wrong place.
+  \item Using \code{git branch -D} or deleting \code{experimnt} instead of renaming it: the commit is still there but the branch name must be \code{experiment}.
+  \item Ending the exercise on another branch: the last task asks you to be on \code{main}.
+\end{itemize}
