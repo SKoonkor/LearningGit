@@ -95,6 +95,7 @@ At any moment, each file in your project is in one of four states:
 \label{fig:states}
 \end{figure}
 
+\Needspace{14\baselineskip}
 A file is \textbf{tracked} if it is in the latest commit or in the staging area; otherwise it is \textbf{untracked}. \code{git status} reports the states in its own words:
 
 \begin{center}
@@ -217,8 +218,8 @@ In the short form each line has \emph{two} columns before the file name: the \te
 \begin{lstlisting}
 $ git add recipes.txt
 $ git status --short
-M  recipes.txt
  M README.md
+M  recipes.txt
 \end{lstlisting}
 
 \code{M\ \ } (\code{M} in the left column) means ``staged''. \code{recipes.txt} is in the staging area and \code{README.md} is not, so a commit now includes \code{recipes.txt} only. Commit it, then stage and commit the other file as its own commit:
@@ -357,7 +358,7 @@ Your history now has five commits, and \code{git log --oneline} shows them all.
 \textbf{Never commit passwords, keys or tokens.} Git remembers every commit, so deleting the file later does \emph{not} erase it from history. If a secret is ever committed, treat it as leaked: change the password or revoke the key. Put such files in \code{.gitignore} \emph{before} the first \code{git add}.
 \end{pitfall}
 
-\Needspace{36\baselineskip}
+\Needspace{8\baselineskip}
 \section{Homework 2}
 
 \begin{homework}{2: Snapshots}
