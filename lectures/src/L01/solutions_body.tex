@@ -1,0 +1,55 @@
+\section*{Solutions to Homework 1}
+
+Run these from the course folder \code{LearningGit/}. Your prompt and the exact path will differ.
+
+\begin{lstlisting}
+$ cd practice
+$ mkdir hw1
+$ cd hw1
+$ git init -b main
+Initialized empty Git repository in .../practice/hw1/.git/
+$ echo "Hello Git" > hello.txt
+$ git config --local user.name "Practice User"
+$ git config --local user.email "practice@example.com"
+$ git status > status.txt
+$ echo ".git" > answer.txt
+\end{lstlisting}
+
+\textbf{1.1.} \code{mkdir hw1} creates the folder and \code{cd hw1} enters it (do this from inside \code{practice/}).
+
+\textbf{1.2.} \code{git init} creates the repository. The branch name comes from the global setting you made in Homework 0; \code{git init -b main} states it explicitly (Git 2.28 or newer), so it is the safe choice. If you forgot and your branch has another name (for example \code{master}), rename it with \code{git branch -m main}.
+
+\textbf{1.3.} \code{echo "Hello Git" > hello.txt} writes one line. Check with \code{cat hello.txt}. Note that \code{>} \emph{replaces} the file each time; \code{>>} would append.
+
+\textbf{1.4.} \code{--local} is the default for \code{git config} inside a repository, so you could omit it, but writing it makes the intent clear. Verify where the values come from, and that your global ones are unchanged:
+\begin{lstlisting}
+$ git config --show-origin user.name
+file:.git/config        Practice User
+$ git config --global user.name
+Your Name
+\end{lstlisting}
+
+\textbf{1.5.} After the redirect, \code{status.txt} should look like this (it lists itself as untracked too, because the file already exists when Git runs):
+\begin{lstlisting}
+On branch main
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	hello.txt
+	status.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+\end{lstlisting}
+
+\textbf{1.6.} The folder is \code{.git}. The file may contain \code{.git} or \code{.git/}.
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes.}
+\begin{itemize}
+  \item Running \code{git init} in the wrong folder (check with \code{pwd}). Do \emph{not} delete anything until you are sure: \code{rm -r .git} is only safe in a folder you created for this exercise and just ran \code{git init} in by mistake. Never run it inside \code{LearningGit/} itself, because that would erase the course repository's history.
+  \item Forgetting that \code{git init} is needed inside \code{practice/hw1}. Without it, \code{git status} would talk about the \emph{course} repository above it.
+  \item Typing the \code{\$} at the start of a command.
+  \item Using \code{--global} instead of \code{--local} in 1.4. That changes your name for every project. Undo it by setting your real name and email again with \code{git config --global}.
+\end{itemize}
