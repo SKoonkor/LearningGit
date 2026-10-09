@@ -68,6 +68,6 @@ Replace \code{YOURNAME} by your GitHub user name. After the browser edit, GitHub
 \begin{itemize}
   \item Running \code{friend.sh} before cloning, or pushing before 6.4. Then there is no divergence and no merge commit, so the check ``exactly one merge commit'' fails. Run \code{setup\_hw6.sh --reset} and follow the order.
   \item \code{Permission denied (publickey)} when pushing to GitHub: the key is not added to your account, or the remote uses the wrong address style. Test with \code{ssh -T git@github.com}; check \code{git remote -v}.
-  \item Creating the GitHub repository \emph{with} a README, then pushing: rejected, because GitHub has a commit you lack. Either create it empty (best) or run \code{git pull origin main --allow-unrelated-histories}, resolve any conflict, and push.
+  \item Creating the GitHub repository \emph{with} a README, then pushing: rejected, because GitHub has a commit you lack. Either create it empty (best) or run \code{git pull origin main}\allowbreak\ \code{--allow-unrelated-histories}, resolve any conflict, and push.
   \item Using \code{git push --force} to ``fix'' a rejection: not allowed here, it erases others' work.
 \end{itemize}

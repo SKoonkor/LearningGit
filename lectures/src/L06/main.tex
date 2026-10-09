@@ -19,6 +19,8 @@
 
 So far everything lived on one computer. That is risky (a lost laptop loses the project) and lonely (nobody else can see or add to it). A \textbf{remote} is simply \emph{another copy of the repository, stored somewhere else}, usually on a server that several people can reach. \textbf{GitHub} is the most popular place to keep one.
 
+(For the first part of this lecture and Homework Part~A, the ``server'' will be just a folder on your own computer, a so-called \emph{bare repository}: a repository without a working folder, which is what a server holds. Git treats a folder path exactly like a GitHub address, so everything works the same. The GitHub account, SSH key and publishing steps come after the core ideas and are needed only for Part~B.)
+
 Remember Lecture 0: Git is \emph{distributed}. Your computer holds a complete repository, GitHub holds another complete repository, and a friend's computer holds a third. They are equals in structure; they stay in step because people \emph{send} commits between them.
 
 \begin{figure}[H]
@@ -30,124 +32,12 @@ Remember Lecture 0: Git is \emph{distributed}. Your computer holds a complete re
   \node[box,fill=orange!12] (rem) at (8.6,0) {\textbf{GitHub}\\[2pt]remote repository\\\scriptsize\ttfamily called \textquotedblleft origin\textquotedblright};
   \draw[arr] ([yshift=6mm]loc.east) -- node[above,font=\small\ttfamily] {git push} ([yshift=6mm]rem.west);
   \draw[arr] ([yshift=-1mm]rem.west) -- node[above,font=\small\ttfamily] {git fetch} ([yshift=-1mm]loc.east);
-  \draw[arr,dashed] ([yshift=-8mm]rem.west) -- node[below,font=\small\ttfamily] {git pull (fetch + merge)} ([yshift=-8mm]loc.east);
+  \draw[arr,dashed] ([yshift=-8mm]rem.west) -- node[below,font=\small\ttfamily] {git pull} ([yshift=-8mm]loc.east);
   \node[font=\scriptsize,text=black!60] at (4.3,-1.8) {\code{git clone} copies a remote to your computer once, at the start};
 \end{tikzpicture}
-\caption{Two full copies of a repository. \code{push} sends your new commits up; \code{fetch} brings new commits down; \code{pull} is a fetch followed by a merge.}
+\caption{Two full copies of a repository. \code{push} sends your new commits up; \code{fetch} brings new commits down; \code{pull} (dashed) is a fetch followed by a merge.}
 \label{fig:remote}
 \end{figure}
-
-\section{Setting up GitHub}
-
-Do these once. They take about ten minutes and are needed for the homework.
-
-\subsection{Account and your private email address}
-
-Create a free account at \url{https://github.com} and turn on two-factor authentication (Settings, ``Password and authentication''). Choose your user name carefully: it appears in every repository address.
-
-In Lecture 1 you put your email address into \code{git config}, and in Lecture 5 you saw that every commit carries it. Commits pushed to GitHub show that address \emph{publicly}. GitHub offers a private ``no-reply'' address that works instead:
-
-\begin{enumerate}
-  \item In GitHub \textbf{Settings $\rightarrow$ Emails}, tick \emph{Keep my email addresses private} and, below it, \emph{Block command line pushes that expose my email}.
-  \item The same page shows your no-reply address: a number, a plus sign, your user name, and \code{@users.noreply.github.com}.
-  \item Tell Git to use it for future commits:
-\end{enumerate}
-
-\begin{lstlisting}
-$ git config --global user.email "12345678+yourname@users.noreply.github.com"
-\end{lstlisting}
-
-Commits you have \emph{already} made keep the old address; the setting changes only new ones.
-
-\subsection{Authentication: proving who you are}
-
-To \code{push} you must prove that the repository is yours. GitHub no longer accepts your account password for this. There are two ways:
-
-\begin{itemize}
-  \item \textbf{HTTPS with a token.} Repository addresses start with \code{https://}, and you paste a long, secret \emph{personal access token} where a password would go.
-  \item \textbf{SSH with a key} (recommended). Repository addresses look like \code{git@github.com:}\allowbreak\code{yourname/repo.git}. You create a pair of key files once and never type a password again.
-\end{itemize}
-
-An \textbf{SSH key} is a pair of files, like a padlock and its key. The \emph{public} half is the padlock: you may give it to anyone, and you put it on GitHub. The \emph{private} half is the key that opens it: it never leaves your computer.
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-  box/.style={draw,rounded corners,minimum width=4.6cm,minimum height=2.0cm,align=center,font=\small}]
-  \node[box,fill=blue!8] (a) at (0,0) {\textbf{Your computer}\\[2pt]\code{id\_ed25519}\\private key: \textbf{secret}};
-  \node[box,fill=orange!12] (b) at (10.6,0) {\textbf{GitHub}\\[2pt]your public key\\(copy of \code{id\_ed25519.pub})};
-  \draw[->,thick,>=Stealth] ([yshift=4mm]a.east) -- node[above,font=\scriptsize] {upload the public half (once)} ([yshift=4mm]b.west);
-  \draw[<->,thick,>=Stealth,dashed] ([yshift=-4mm]a.east) -- node[below,font=\scriptsize] {proves you hold the private half} ([yshift=-4mm]b.west);
-\end{tikzpicture}
-\caption{A key pair. Only the public half is ever uploaded.}
-\label{fig:keys}
-\end{figure}
-
-\textbf{Create the key} (in a terminal; in Git Bash on Windows). Use your own email address as the label, and a passphrase when asked:
-
-\begin{lstlisting}
-$ ssh-keygen -t ed25519 -C "you@example.com"
-Enter file in which to save the key (/Users/you/.ssh/id_ed25519):   <Enter>
-Enter passphrase (empty for no passphrase):   <type one>
-\end{lstlisting}
-
-This creates two files in the hidden folder \code{\textasciitilde{}/.ssh/}: \code{id\_ed25519} (private) and \code{id\_ed25519.pub} (public). Print the public one and copy the whole line:
-
-\begin{lstlisting}
-$ cat ~/.ssh/id_ed25519.pub
-ssh-ed25519 AAAAC3Nza...(long)... you@example.com
-\end{lstlisting}
-
-On GitHub open \textbf{Settings $\rightarrow$ SSH and GPG keys $\rightarrow$ New SSH key}, give it a title (for example ``my laptop''), paste the line, and save. Then test the connection:
-
-\begin{lstlisting}
-$ ssh -T git@github.com
-Hi yourname! You've successfully authenticated, but GitHub does not provide shell access.
-\end{lstlisting}
-
-That message is success: GitHub knows you, and (as it says) does not give you a command line on its servers. The first time, SSH asks whether to trust the server; check the fingerprint against the one in GitHub's documentation, then answer \code{yes}.
-
-\begin{pitfall}
-Never share, e-mail or upload the file \emph{without} \code{.pub} (the private key), and never commit a \code{.ssh} folder. If you suspect it leaked, delete the key on GitHub and create a new pair. The passphrase protects the file if your laptop is stolen.
-\end{pitfall}
-
-\begin{quickfact}
-If you prefer HTTPS: create a token under Settings $\rightarrow$ Developer settings $\rightarrow$ Personal access tokens, give it only the \emph{repo} permission, and paste it when Git asks for a password. Your operating system can remember it (the \emph{credential helper}). Everything else in this lecture is identical: only the address style differs.
-\end{quickfact}
-
-\section{Putting a local repository on GitHub}
-
-You already have a local repository. To share it:
-
-\begin{enumerate}
-  \item On GitHub click \textbf{New repository}. Give it a name and choose public or private.
-  \item \textbf{Do not} tick ``Add a README'', ``.gitignore'' or ``license''. Those would create a first commit on GitHub that your local history does not contain, and the two histories would not fit together. You want an \emph{empty} repository.
-  \item GitHub now shows its quick-setup page with the repository's address. Copy the SSH address.
-\end{enumerate}
-
-\begin{pitfall}
-That page offers two snippets, and the wrong one can do damage. The \emph{first} (``create a new repository on the command line'') starts with \code{echo "\# name" >> README.md} and \code{git init}. It is for a \emph{brand-new, empty folder}. Run inside an existing project, it appends a stray line to your README. You want the \emph{second} (``push an existing repository''), which has three lines. One of them, \code{git branch -M main}, \emph{renames the branch you are currently on} to \code{main}, so check with \code{git branch --show-current} that you are on the branch you mean.
-\end{pitfall}
-
-The three commands, run inside your existing repository:
-
-\begin{lstlisting}
-$ git remote add origin git@github.com:yourname/hello-github.git
-$ git remote -v
-origin  git@github.com:yourname/hello-github.git (fetch)
-origin  git@github.com:yourname/hello-github.git (push)
-$ git push -u origin main
-To github.com:yourname/hello-github.git
- * [new branch]      main -> main
-branch 'main' set up to track 'origin/main'.
-\end{lstlisting}
-
-(Real output also shows progress lines such as \code{Counting objects}, left out here.) Line by line:
-\begin{itemize}
-  \item \code{git remote add origin <address>} gives the remote a short name. \code{origin} is the conventional name for ``the place I got this from or share it with''; it is only a label.
-  \item \code{git remote -v} lists your remotes. To change an address later: \code{git remote set-url origin <new-address>}.
-  \item \code{git push -u origin main} sends the commits of the branch \code{main} to \code{origin}. The \code{-u} (``upstream'') makes your \code{main} \emph{remember} that it belongs with \code{origin/main}, so that afterwards a plain \code{git push} or \code{git pull} is enough.
-\end{itemize}
 
 \section{Copying a repository: \texttt{git clone}}
 
@@ -165,11 +55,11 @@ $ git log --oneline --decorate
 3db1fe7 Add README
 \end{lstlisting}
 
-One command created a new folder with the \emph{whole history}, set up the remote called \code{origin}, and checked out the main branch. (\code{git clone <address> mydir} picks another folder name.) You do not run \code{git init} first.
+(The address may be a GitHub address, as here, or just a folder path such as \code{hw6\_server.git}, as in the homework.) One command created a new folder with the \emph{whole history}, set up the remote called \code{origin}, and checked out the main branch. (\code{git clone <address> mydir} picks another folder name.) You do not run \code{git init} first.
 
 \section{Remote-tracking branches: \texttt{origin/main}}
 
-Look at the log above: it shows both \code{main} and \code{origin/main}. They are different things.
+Look at the log above: it shows both \code{main} and \code{origin/main}. The notation is \code{<remote name>/<branch name>}, and they are different things. (\code{origin/HEAD} is the remote's default branch; ignore it.)
 
 \begin{itemize}
   \item \code{main} is \emph{your} branch. It moves when you commit.
@@ -240,7 +130,7 @@ $ git log --oneline main..origin/main        # what is new on the remote?
 322927b Friend update
 \end{lstlisting}
 
-``Behind, and can be fast-forwarded'' is the easy case from Lecture 5: your branch just has to catch up. \code{git pull} does exactly a fetch followed by a merge, here a fast-forward:
+``Behind, and can be fast-forwarded'' is the easy case from Lecture 5: your branch has nothing new, so it just slides forward to catch up. \code{git pull} does exactly a fetch followed by a merge, here a fast-forward:
 
 \begin{lstlisting}
 $ git pull
@@ -289,7 +179,7 @@ hint: (e.g., 'git pull ...') before pushing again.
 \label{fig:diverged}
 \end{figure}
 
-The cure is the merge you learned in Lecture 5: first bring your friend's commit in, then push. Newer Git versions, however, insist that you \emph{choose} how \code{pull} should combine the two:
+The cure is the merge you learned in Lecture 5: first bring your friend's commit in, then push. Git 2.33 and newer, however, insist that you \emph{choose} how \code{pull} should combine two diverged branches (if you see no such message, your Git is already configured, so carry on):
 
 \begin{lstlisting}
 $ git pull
@@ -304,7 +194,7 @@ hint:   git config pull.ff only       # fast-forward only
 fatal: Need to specify how to reconcile divergent branches.
 \end{lstlisting}
 
-(Some of the hint lines are left out.) Notice that the fetch part already worked: \code{origin/main} moved. Only the combining step is waiting for your decision. We choose \textbf{merge}, which you know, and say so once for all repositories (rebase is Lecture 8):
+(Some hint lines are left out.) Notice that the fetch part already worked: \code{origin/main} moved. Only the combining step is waiting for your decision. We choose \textbf{merge}, which you know, and say so once for all repositories with \code{--global} (rebase is Lecture 8; the homework sets it for one repository only):
 
 \begin{lstlisting}
 $ git config --global pull.rebase false
@@ -326,7 +216,7 @@ Never use \code{git push --force} to get around a rejection. It overwrites the r
 
 \section{Branches and the remote}
 
-A new branch exists only on your computer until you push it. Use \code{-u} the first time:
+A new branch exists only on your computer until you push it. Use \code{-u} the first time. It sets the branch's \emph{upstream}: it pairs your local branch with the remote branch of the same name (``set up to track'' in the output below), so afterwards a plain \code{git push} or \code{git pull} knows where to go.
 
 \begin{lstlisting}
 $ git switch -c feature
@@ -344,6 +234,127 @@ $ git branch -r
 
 \code{git branch -vv} shows which remote branch each local branch tracks; \code{git branch -r} lists the remote-tracking branches. To delete a branch on the remote once it is merged: \code{git push origin --delete feature}. (Your own \code{origin/feature} label disappears at the next \code{git fetch --prune}.)
 
+\section{Setting up GitHub}
+
+Do these once. They take about ten minutes. \textbf{Homework Part~A does not need them; they are needed for Part~B}, so you can also do Part~A first.
+
+\subsection{Account and your private email address}
+
+Create a free account at \url{https://github.com} and turn on two-factor authentication (Settings, ``Password and authentication''). Choose your user name carefully: it appears in every repository address.
+
+In Lecture 1 you put your email address into \code{git config}, and in Lecture 5 you saw that every commit carries it. Commits pushed to GitHub show that address \emph{publicly}. GitHub offers a private ``no-reply'' address that works instead:
+
+\begin{enumerate}
+  \item In GitHub \textbf{Settings $\rightarrow$ Emails}, tick \emph{Keep my email addresses private} and, below it, \emph{Block command line pushes that expose my email}.
+  \item The same page shows your no-reply address: a number, a plus sign, your user name, and \code{@users.noreply.github.com}. Copy it from there rather than typing it.
+  \item Tell Git to use it for future commits:
+\end{enumerate}
+
+\begin{lstlisting}
+$ git config --global user.email "12345678+yourname@users.noreply.github.com"
+\end{lstlisting}
+
+Commits you have \emph{already} made (such as those of Lectures 1--5) keep the old address; the setting changes only new commits. Rewriting old history to change them is possible but out of scope here, so do not worry about it. Check the setting any time with \code{git config --global user.email}.
+
+\subsection{Authentication: proving who you are}
+
+To \code{push} you must prove that the repository is yours. GitHub no longer accepts your account password for this. There are two ways:
+
+\begin{itemize}
+  \item \textbf{HTTPS with a token.} Repository addresses start with \code{https://}, and you paste a long, secret \emph{personal access token} where a password would go.
+  \item \textbf{SSH with a key} (recommended). Repository addresses look like \code{git@github.com:}\allowbreak\code{yourname/repo.git}. You create a pair of key files once; afterwards you do not paste a token on every push.
+\end{itemize}
+
+An \textbf{SSH key} is a pair of files, like a padlock and its key. The \emph{public} half is the padlock: you may give it to anyone, and you put it on GitHub. The \emph{private} half is the key that opens it: it never leaves your computer.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw,rounded corners,minimum width=4.6cm,minimum height=2.0cm,align=center,font=\small}]
+  \node[box,fill=blue!8] (a) at (0,0) {\textbf{Your computer}\\[2pt]\code{id\_ed25519}\\private key: \textbf{secret}};
+  \node[box,fill=orange!12] (b) at (10.6,0) {\textbf{GitHub}\\[2pt]your public key\\(copy of \code{id\_ed25519.pub})};
+  \draw[->,thick,>=Stealth] ([yshift=4mm]a.east) -- node[above,font=\scriptsize] {upload the public half (once)} ([yshift=4mm]b.west);
+  \draw[<->,thick,>=Stealth,dashed] ([yshift=-4mm]a.east) -- node[below,font=\scriptsize] {proves you hold the private half} ([yshift=-4mm]b.west);
+\end{tikzpicture}
+\caption{A key pair. Only the public half is ever uploaded.}
+\label{fig:keys}
+\end{figure}
+
+\textbf{Create the key} (in a terminal; in Git Bash on Windows). Use your own email address as the label, and a passphrase when asked:
+
+\begin{lstlisting}
+$ ssh-keygen -t ed25519 -C "you@example.com"
+Enter file in which to save the key (/Users/you/.ssh/id_ed25519):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+\end{lstlisting}
+
+At the first question just press Enter. At the passphrase question type a passphrase (a password for the key file); \emph{no characters appear while you type}, which is normal. Type it again to confirm. (If it says the key already exists, answer \code{n} and reuse the existing key.)
+
+This creates two files in the hidden folder \code{\textasciitilde{}/.ssh/}: \code{id\_ed25519} (private) and \code{id\_ed25519.pub} (public). Print the public one and copy the whole line:
+
+\begin{lstlisting}
+$ cat ~/.ssh/id_ed25519.pub
+ssh-ed25519 AAAAC3Nza...(long)... you@example.com
+\end{lstlisting}
+
+On GitHub open \textbf{Settings $\rightarrow$ SSH and GPG keys $\rightarrow$ New SSH key}, give it a title (for example ``my laptop''), paste the line, and save. Then test the connection:
+
+\begin{lstlisting}
+$ ssh -T git@github.com
+Hi yourname! You've successfully authenticated, but GitHub does not provide shell access.
+\end{lstlisting}
+
+That message is success: GitHub knows you, and (as it says) does not give you a command line on its servers. The first time, SSH asks whether to trust the server; compare the fingerprint it prints with the one on GitHub's documentation page ``GitHub's SSH key fingerprints'', then answer \code{yes}.
+
+If you set a passphrase, your computer may ask for it on every push. Let it remember the passphrase for this session with \code{ssh-add \textasciitilde{}/.ssh/id\_ed25519} (on macOS: \code{ssh-add --apple-use-keychain \textasciitilde{}/.ssh/id\_ed25519}). On Windows, Git Bash shows your home folder as \code{/c/Users/yourname}, and you may first need \code{eval "\$(ssh-agent -s)"} to start the agent.
+
+\begin{pitfall}
+\textbf{If the test fails.} \code{Permission denied (publickey)} means GitHub does not know your key: re-copy the \emph{whole} line of the \code{.pub} file into GitHub (not the private file), and check that you added it to your own account. \code{Could not resolve hostname} means no internet connection.
+\end{pitfall}
+
+\begin{pitfall}
+Never share, e-mail or upload \code{id\_ed25519} (the private key; the file ending in \code{.pub} is the safe one), and never commit a \code{.ssh} folder. If you suspect it leaked, delete the key on GitHub and create a new pair. The passphrase protects the file if your laptop is stolen.
+\end{pitfall}
+
+\begin{quickfact}
+If you prefer HTTPS: create a \emph{classic} token under Settings $\rightarrow$ Developer settings $\rightarrow$ Personal access tokens, tick only the scope \emph{repo}, and paste it when Git asks for a password. In Part~B copy the HTTPS address instead of the SSH one; the checker accepts both. Your operating system can remember it (the \emph{credential helper}). Everything else in this lecture is identical: only the address style differs.
+\end{quickfact}
+
+\section{Putting a local repository on GitHub}
+
+You already have a local repository. To share it:
+
+\begin{enumerate}
+  \item On GitHub click \textbf{New repository}. Give it a name and choose public or private.
+  \item \textbf{Do not} tick ``Add a README'', ``.gitignore'' or ``license''. Those would create a first commit on GitHub that your local history does not contain, and the two histories would not fit together. You want an \emph{empty} repository.
+  \item GitHub now shows its quick-setup page with the repository's address. Copy the SSH address, and read the warning below before you copy any snippet.
+\end{enumerate}
+
+\begin{pitfall}
+That page offers two snippets, and the wrong one can do damage. The \emph{first} (``create a new repository on the command line'') starts with \code{echo "\# name" >> README.md} and \code{git init}. It is for a \emph{brand-new, empty folder}. Run inside an existing project, it appends a stray line to your README. You want the \emph{second} (``push an existing repository''), which has three lines. One of them, \code{git branch -M main}, \emph{renames the branch you are currently on} to \code{main}, so check with \code{git branch --show-current} that you are on the branch you mean.
+\end{pitfall}
+
+The three commands, run inside your existing repository:
+
+\begin{lstlisting}
+$ git remote add origin git@github.com:yourname/hello-github.git
+$ git remote -v
+origin  git@github.com:yourname/hello-github.git (fetch)
+origin  git@github.com:yourname/hello-github.git (push)
+$ git push -u origin main
+To github.com:yourname/hello-github.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
+\end{lstlisting}
+
+(Real output also shows progress lines such as \code{Counting objects}, left out here.) Line by line:
+\begin{itemize}
+  \item \code{git remote add origin <address>} gives the remote a short name. \code{origin} is the conventional name for ``the place I got this from or share it with''; it is only a label.
+  \item \code{git remote -v} lists your remotes. To change an address later: \code{git remote set-url origin <new-address>}.
+  \item \code{git push -u origin main} sends the commits of the branch \code{main} to \code{origin}. The \code{-u} (``upstream'') makes your \code{main} \emph{remember} that it belongs with \code{origin/main}, so that afterwards a plain \code{git push} or \code{git pull} is enough.
+\end{itemize}
+
 \section{What GitHub adds}
 
 The website shows your repository: files, the commit list, branches, and the \code{README.md} rendered as a front page. A README is written in \textbf{Markdown}, a plain-text format where \code{\# Title} is a heading, \code{**bold**} is \textbf{bold}, \code{- item} starts a list, and backticks make \code{code}. You can also edit a file in the browser (the pencil icon) and ``commit changes'' there. That creates a \emph{commit on GitHub}, which your local copy does not have until you \code{git pull}.
@@ -356,18 +367,18 @@ Everything you push is as visible as the repository: anyone can read a \emph{pub
 \section{Homework 6}
 
 \begin{homework}{6: Sharing}
-\textbf{Part A: practice with a ``server'' folder} (no internet needed). The setup script creates \code{practice/hw6\_server.git}, a shared repository that plays the role of GitHub. From the course folder run:
+\textbf{Part A: practice with a ``server'' folder} (no internet needed). The setup script creates \code{practice/hw6\_server.git}, a bare repository that plays the role of GitHub. Cloning, pushing, fetching and pulling work with it exactly as with GitHub. From the course folder run:
 \begin{lstlisting}
 $ bash codeHints/L06/setup_hw6.sh
 $ cd practice
 \end{lstlisting}
-Do the tasks in this order. To start over: \code{setup\_hw6.sh --reset} from the course folder.
+Do the tasks in this order, and \emph{do not push before 6.4}. To start over (also if you ran \code{friend.sh} too early): \code{setup\_hw6.sh --reset} from the course folder.
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[6.1 Clone] Clone the server into a folder called \code{hw6} (\code{git clone hw6\_server.git hw6}) and go into it.
-\item[6.2 Look around] Run \code{git remote -v}, \code{git branch -a} and \code{git log --oneline --decorate}. In \code{practice/hw6\_answers.txt} (next to the \code{hw6} folder; create it with \code{printf} or \code{echo}) write the line \code{remote=<the name of the remote>}.
-\item[6.3 Commit locally] Create \code{mine.txt} containing \code{my work} and commit it as \code{Add my work}. \emph{Do not push yet.} Run \code{git status} and add the line \code{ahead=<number of commits ahead>} to the answers file.
-\item[6.4 Your friend pushes] From the \emph{course folder} run \code{bash codeHints/L06/friend.sh}. Back in \code{hw6}, try \code{git push} and read the rejection. Set \code{git config pull.rebase false}, then run \code{git pull --no-edit}. Check \code{git log --oneline --graph}: there is now one merge commit.
+\item[6.2 Look around] Run \code{git remote -v}, \code{git branch -a} and \code{git log --oneline --decorate}. In \code{practice/hw6\_answers.txt} (next to the \code{hw6} folder; create it with \code{printf} or \code{echo} in Git Bash, not with a PowerShell redirect) write the line \code{remote=<the name of the remote>}.
+\item[6.3 Commit locally] Create \code{mine.txt} containing \code{my work} and commit it as \code{Add my work}. \emph{Do not push yet, and do not run \code{friend.sh} yet.} Run \code{git status} and add the line \code{ahead=<number of commits ahead>} to the answers file.
+\item[6.4 Your friend pushes] Go back to the \emph{course folder} (\code{cd ../..}) and run \code{bash codeHints/L06/friend.sh}. Then \code{cd practice/hw6} again and try \code{git push} and read the rejection. Set \code{git config pull.rebase false}, then run \code{git pull --no-edit}. Check \code{git log --oneline --graph}: there is now one merge commit.
 \item[6.5 Push] Run \code{git push}. Your \code{main} and the server's \code{main} must now be identical.
 \item[6.6 A branch] Create the branch \code{feature}, add a file \code{feature.txt}, commit it as \code{Add feature file}, and push it with \code{git push -u origin feature}.
 \item[6.7 Question] Add the line \code{no-merge=<command>}: the one Git command from this lecture that downloads new commits \emph{without} changing your branch or your files.
@@ -375,9 +386,9 @@ Do the tasks in this order. To start over: \code{setup\_hw6.sh --reset} from the
 
 \textbf{Part B: the real thing (optional, but this is why you came).} You need your GitHub account and the SSH key from this lecture.
 \begin{description}[leftmargin=1.2em,style=nextline]
-\item[6.8 Create and push] On GitHub create a new \emph{empty} repository called \code{hello-github} (no README). In \code{practice/} create the folder \code{hw6\_github}, run \code{git init -b main} in it, add a \code{README.md} with a heading line, commit, add the SSH address as \code{origin}, and \code{git push -u origin main}.
-\item[6.9 Edit on GitHub, then pull] In the browser, edit \code{README.md} and commit the change on GitHub. Then run \code{git pull} locally and check \code{git log} shows the new commit.
-\item[6.10 Look and check] Open the repository page on github.com and find your commits. Then run the checker.
+\item[6.8 Create and push] Do the account, privacy and SSH setup above first. On GitHub create a new \emph{empty} repository called \code{hello-github} (no README). In \code{practice/} create the folder \code{hw6\_github}, run \code{git init -b main} in it (\code{-b main} names the first branch, as in Lecture 1), add a \code{README.md} with a heading line such as \code{\# Hello GitHub}, commit, add the SSH address as \code{origin}, and \code{git push -u origin main}.
+\item[6.9 Edit on GitHub, then pull] In the browser open \code{README.md}, click the pencil icon, change the text, and press \emph{Commit changes}. Then run \code{git pull} locally and check that \code{git log} shows the new commit.
+\item[6.10 Look, then check] On github.com, find your commits in the commit list. Then run the checker.
 \end{description}
 
 \textbf{Check yourself:} from the course folder run \code{bash codeHints/L06/check\_hw6.sh}. Part A needs no network. Part B is checked only if \code{practice/hw6\_github} exists; if GitHub cannot be reached, that one check is skipped. All \code{PASS}, then compare with the solutions at the end of this lecture (or in \code{solutions/L06/}).
