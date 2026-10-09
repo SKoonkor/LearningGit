@@ -1,0 +1,41 @@
+\section*{Solutions to Homework 3}
+
+\begin{lstlisting}
+$ bash codeHints/L03/setup_hw3.sh
+$ cd practice/hw3
+$ git log --oneline
+e672c50 Update notse
+6e1cc4f Buy fireworks
+809893e Add recipe notes
+2217470 Add shopping list
+$ git restore list.txt
+$ git restore --staged notes.txt
+$ git commit --amend -m "Update notes"
+$ git revert --no-edit 6e1cc4f
+$ git status --short
+ M notes.txt
+$ printf 'fireworks=6e1cc4f\ncommits=4\nno-undo=restore\n' > ../hw3_answers.txt
+\end{lstlisting}
+
+(Your IDs for the first three commits match these because the setup script fixes author and dates. The amended and revert commits get new IDs.)
+
+\textbf{3.1.} \code{git log --oneline} shows the ID \code{6e1cc4f} next to \code{Buy fireworks} and four lines, so \code{commits=4}. The answer file lives in \code{practice/}, outside the repository, so it does not show up as an untracked file.
+
+\textbf{3.2.} \code{git diff list.txt} first shows the junk line \code{+oops delete me}. \code{git restore list.txt} removes it. This is the destructive command: it is correct here, because the line really was junk. You must do this \emph{before} the revert, because the revert changes \code{list.txt} too and Git will not overwrite your uncommitted edit.
+
+\textbf{3.3.} \code{git restore --staged notes.txt} moves the \code{TODO: add syrup} line from ``staged'' back to ``modified''. The line stays in the file. Check with \code{git status --short}: the first column is now empty.
+
+\textbf{3.4.} \code{git commit --amend -m "Update notes"} rewrites the last commit with the corrected message. The order matters: if you amend while \code{notes.txt} is still staged, the TODO line is pulled into the commit. That is why 3.3 comes first. If you made that mistake, run \code{setup\_hw3.sh --reset} and start again.
+
+\textbf{3.5.} \code{git revert --no-edit 6e1cc4f} creates \code{Revert "Buy fireworks"} on top of the amended commit. The history has five commits now. It works without conflict because the commits after \code{Buy fireworks} only touched \code{notes.txt}.
+
+\textbf{3.6.} The answer is \code{restore}. It discards uncommitted work for good. (\code{restore --staged} is safe, and \code{amend} and \code{revert} keep the old commits reachable.)
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes.}
+\begin{itemize}
+  \item Doing 3.4 before 3.3: the TODO line gets committed. Reset and redo in the right order.
+  \item Running \code{git revert} without \code{--no-edit} and getting stuck in the editor: press \code{Esc}, type \code{:wq}, Enter to accept the default message.
+  \item Reverting the wrong commit (the typo commit instead of \code{Buy fireworks}). Look at the ID in \code{git log --oneline} before you revert.
+  \item Using \code{git reset}, which this lecture did not teach: it can rewrite history so that the first three commits change, and the checker notices.
+\end{itemize}
