@@ -173,11 +173,11 @@ $ git pull
 $ git branch -d add-note        # fine after a merge commit
 \end{lstlisting}
 
-(After \emph{Squash and merge} or \emph{Rebase and merge}, GitHub created \emph{new} commits, so Git cannot see that your branch's commits are included. Depending on whether Git still has the old \code{origin/add-note} label, \code{-d} then either refuses (``not fully merged'') or succeeds with a warning. If it refuses and you checked on GitHub that the pull request is merged, use \code{git branch -D add-note}. This is one of the rare safe uses of \code{-D}: you checked on GitHub that the pull request was merged.)
+(After \emph{Squash and merge} or \emph{Rebase and merge}, GitHub created \emph{new} commits, so Git cannot see that your branch's commits are included. Depending on whether Git still has the old \code{origin/add-note} label, \code{-d} then either refuses (``not fully merged'') or succeeds with a warning. If it refuses and you checked on GitHub that the pull request is merged, use \code{git branch -D add-note}. That is a safe use of \code{-D}.)
 
 \section{Looking at a teammate's branch}\label{sec:teammate}
 
-\textbf{Looking at a teammate's branch before you review it.} Fetch, look, and (if you want to run it) check it out:
+Fetch, look, and (if you want to run it) check it out:
 
 \Needspace{12\baselineskip}
 \begin{lstlisting}
@@ -190,6 +190,7 @@ $ git diff --stat main...origin/teammate-feature     # files it changes
  greeting.txt | 1 +
  2 files changed, 2 insertions(+)
 $ git switch teammate-feature
+Switched to a new branch 'teammate-feature'
 branch 'teammate-feature' set up to track 'origin/teammate-feature'.
 \end{lstlisting}
 
@@ -211,7 +212,7 @@ You cannot push to someone else's repository (nor should you be able to). Open-s
   \draw[arr] (fk) -- node[right,font=\scriptsize] {2.\ \code{git clone}} (lo);
   \draw[arr,bend left=12] ([xshift=-0.9cm]lo.north) to node[left,font=\scriptsize,align=right] {3.\ \code{git push}\\(to \code{origin})} ([xshift=-0.9cm]fk.south);
   \draw[arr,dashed] ([yshift=-3mm]fk.west) -- node[below,font=\scriptsize] {4.\ pull request} ([yshift=-3mm]up.east);
-  \draw[arr,dashed] (up.south) -- node[pos=0.45,left=3pt,font=\scriptsize,align=right] {5.\ \code{git fetch upstream}} ($(lo.west)+(0,0.0)$);
+  \draw[arr,dashed] (up.south) -- node[pos=0.35,left=6pt,fill=white,font=\scriptsize,align=right] {5.\ \code{git fetch upstream}} ($(lo.west)+(0,0.0)$);
 \end{tikzpicture}
 \caption{Three copies. You clone your fork (\code{origin}) and also add the original as a second remote called \code{upstream}, to follow its progress.}
 \label{fig:fork}
@@ -270,7 +271,7 @@ Do the tasks in order. To start over: \code{setup\_hw7.sh --reset} from the cour
 \item[7.6 Question] On GitHub, which of the three merge buttons would produce the same result as your command in 7.4 (all commits kept, plus a merge commit)? Add the line \code{merge-button=<word>} with \code{merge}, \code{squash} or \code{rebase}.
 \end{description}
 
-\textbf{Part B: real pull requests with your friend} (optional, but this is the point of the lecture). You need two GitHub accounts, called \textbf{A} and \textbf{B}. Before you start: both repositories must be created as \textbf{Public} (not Private), because the checker looks them up without logging in; and if you ticked ``Block command line pushes that expose my email'' in Lecture 6, make sure \code{git config user.email} in your clone is your no-reply address. The two rounds are done one after the other. \emph{Each of you ends up with exactly one clone, \code{practice/hw7\_pr}}: B's from Round 1, A's from Round 2 (it is not the same as \code{practice/hw7} of Part A). Run the clone commands from the course folder.
+\textbf{Part B: real pull requests with your friend} (optional, but this is the point of the lecture). You need two GitHub accounts, called \textbf{A} and \textbf{B}. Before you start: the repositories you create below must be \textbf{Public} (not Private), because the checker looks them up without logging in; and if you ticked ``Block command line pushes that expose my email'' in Lecture 6, make sure \code{git config user.email} in your clone is your no-reply address. The two rounds are done one after the other. \emph{Each of you ends up with exactly one clone, \code{practice/hw7\_pr}}: B's from Round 1, A's from Round 2 (it is not the same as \code{practice/hw7} of Part A). Run the clone commands from the course folder.
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[7.7 Round 1: shared repository, B's pull request] \textbf{A} creates a \emph{Public} repository \code{pr-practice} with a README (ticking ``Add a README'' is fine here), and adds \textbf{B} under Settings $\rightarrow$ Collaborators $\rightarrow$ Add people (type B's exact user name). \textbf{B} \emph{must accept the invitation}: open the e-mail from GitHub, or go to \code{github.com/A/pr-practice/invitations}. Until B accepts, a push fails with ``Permission denied'' or ``403''. Then \textbf{B} clones into \code{practice/hw7\_pr}, creates the branch \code{add-b-note} with a new file \code{notes-from-b.md}, pushes it, and opens a pull request with a title and a description. \textbf{A} reviews: at least one inline comment (use \emph{Add a suggestion} once), then \emph{Submit review} with \emph{Request changes}. \textbf{B} responds (clicking \emph{Commit suggestion}, or committing a fix on the same branch and pushing). \textbf{A} approves and merges with \emph{Create a merge commit}. \textbf{B} presses \emph{Delete branch}, then in the clone: \code{git switch main}, \code{git pull}, \code{git branch -d add-b-note}.

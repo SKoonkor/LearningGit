@@ -35,7 +35,7 @@ $ git push origin --delete teammate-feature
 \textbf{Round 1: shared repository (B opens the pull request).}
 
 {\small
-\begin{longtable}{@{}c p{0.84\textwidth}@{}}
+\begin{longtable}{@{}c >{\raggedright\arraybackslash}p{0.84\textwidth}@{}}
 \toprule
 Who & Step \\
 \midrule
@@ -56,13 +56,13 @@ B & \code{printf 'my-pr=A/pr-practice\#1\textbackslash n' > ../hw7\_pr\_answers.
 \textbf{Round 2: fork (A opens the pull request).}
 
 {\small
-\begin{longtable}{@{}c p{0.84\textwidth}@{}}
+\begin{longtable}{@{}c >{\raggedright\arraybackslash}p{0.84\textwidth}@{}}
 \toprule
 Who & Step \\
 \midrule
 \endhead
 B & Create a \emph{public} repository \code{pr-practice-b} with a README. \\
-A & \emph{Fork} the repository, then \code{git clone git@github.com:A/pr-practice-b.git practice/hw7\_pr}. \\
+A & \emph{Fork} the repository, then \code{git clone git@github.com:A/pr-practice-b.git practice/hw7\_pr} and \code{cd practice/hw7\_pr}. \\
 A & \code{git remote add upstream git@github.com:B/pr-practice-b.git}; \code{git remote -v} shows both remotes. \\
 A & \code{git switch -c add-a-note}, add a file, commit, \code{git push -u origin add-a-note}. \\
 A & On GitHub open the pull request; check that the base repository is \code{B/pr-practice-b}. \\
@@ -70,11 +70,11 @@ B & Review with a suggestion and \emph{Request changes}. \\
 A & \emph{Commit suggestion}. \\
 B & \emph{Approve}; \emph{Squash and merge}. \\
 A & \code{git fetch upstream}, \code{git switch main}, \code{git merge upstream/main}, \code{git push origin main}. \\
-A & \code{printf 'my-pr=B/pr-practice-b\#1\textbackslash n' > ../hw7\_pr\_answers.txt}. \\
+A & \code{printf 'my-pr=B/pr-practice-b\#1\textbackslash n' > ../hw7\_pr\_answers.txt} (from inside \code{hw7\_pr}). \\
 \bottomrule
 \end{longtable}}
 
-In Round 1, A has no local clone, and in Round 2, B has none; the names and the numbers \code{\#1} above are placeholders. Each of you writes the pull request \emph{you opened}: B the one from Round 1, A the one from Round 2. Both repositories must be public, because the checker asks GitHub's public service whether the pull request is merged. If the line is missing the checker skips nothing silently: a missing or private pull request is reported as a failure, while an unreachable GitHub (no network, or more than 60 anonymous requests an hour) skips only that one check. The \code{upstream} check applies only to the fork route (A). After Round 2, A's \code{practice/hw7\_pr} is the fork clone, so \code{origin} points at A's fork on github.com and \code{upstream} at B's repository.
+In Round 1, A has no local clone, and in Round 2, B has none; the names and the numbers \code{\#1} above are placeholders. Each of you writes the pull request \emph{you opened}: B the one from Round 1, A the one from Round 2. Both repositories must be public, because the checker asks GitHub's public service whether the pull request is merged. If the line is missing, the checker reports a failure; a private or non-existent pull request is a failure too, while an unreachable GitHub (no network, or more than 60 anonymous requests an hour) skips only that one check. The \code{upstream} check applies only to the fork route (A). After Round 2, A's \code{practice/hw7\_pr} is the fork clone, so \code{origin} points at A's fork on github.com and \code{upstream} at B's repository.
 
 \Needspace{8\baselineskip}
 \textbf{Common mistakes.}

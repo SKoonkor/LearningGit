@@ -63,7 +63,7 @@ else
   b_clean()  { [ -d "$PB/.git" ] && [ -z "$(p status --porcelain | grep -v -e '\.DS_Store' -e 'Thumbs\.db')" ]; }
   b_main()   { [ "$(p symbolic-ref --short HEAD 2>/dev/null)" = "main" ]; }
   b_fmt()    { echo "$(ans "$BANS" my-pr)" | grep -Eq '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+$'; }
-  repo_of()  { sed -E 's#^.*github\.com[:/]##; s#\.git$##; s#/$##'; }
+  repo_of()  { sed -E 's#^.*github\.com[:/]##; s#/$##; s#\.git$##; s#/$##'; }
   b_fork()   { p remote get-url upstream >/dev/null 2>&1; }
   check "7.7/7.8 practice/hw7_pr is a clone whose origin is on github.com"    b_dir
   check "7.9 you are back on main"                                       b_main
@@ -77,8 +77,9 @@ else
     upstream_repo="$(p remote get-url upstream 2>/dev/null | repo_of)"
     lc() { echo "$1" | tr 'A-Z' 'a-z'; }
     route_ok() {
-      [ "$(lc "$repo")" = "$(lc "$origin_repo")" ] && return 0
-      [ -n "$upstream_repo" ] && [ "$(lc "$repo")" = "$(lc "$upstream_repo")" ]
+      # fork route (an 'upstream' remote exists): the PR must be in the ORIGINAL repository, not in your own fork
+      if [ -n "$upstream_repo" ]; then [ "$(lc "$repo")" = "$(lc "$upstream_repo")" ]; return; fi
+      [ "$(lc "$repo")" = "$(lc "$origin_repo")" ]
     }
     check "7.9 your pull request is in the repository you cloned (collaborator route) or in your 'upstream' (fork route)" route_ok
     body="$(curl -sL -m 15 -w '\n%{http_code}' "https://api.github.com/repos/$repo/pulls/$num" 2>/dev/null)"
