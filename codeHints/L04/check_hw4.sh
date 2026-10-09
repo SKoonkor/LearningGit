@@ -17,14 +17,14 @@ old_kept()    { [ "$(g rev-list --reverse main | sed -n 1p)" = "$(sed -n 1p "$ID
 shop_two()    { [ "$(g rev-list --count main..shopping)" = "2" ]; }
 shop_msgs()   { [ "$(g log --reverse --format=%s main..shopping | tr '\n' '|')" = "Add shopping list|Add eggs|" ]; }
 shop_base()   { [ "$(g merge-base main shopping)" = "$(sed -n 2p "$IDS")" ]; }
-shop_file()   { [ "$(g show shopping:shopping.txt)" = "$(printf 'milk\neggs')" ]; }
+shop_file()   { [ "$(g show shopping:shopping.txt | tr -d '\r')" = "$(printf 'milk\neggs')" ]; }
 main_three()  { [ "$(g rev-list --count main)" = "3" ]; }
 main_msg()    { [ "$(g log -1 --format=%s main)" = "Add notes" ]; }
 main_notes()  { g cat-file -e main:notes.txt; }
-main_noshop() { ! g cat-file -e main:shopping.txt 2>/dev/null; }
-exp_ok()      { [ "$(tip experiment)" = "$(sed -n 1p "$IDS")" ]; }
+main_noshop() { own_repo && g cat-file -e main:app.txt 2>/dev/null && ! g cat-file -e main:shopping.txt 2>/dev/null; }
+exp_ok()      { [ -n "$(tip experiment)" ] && [ "$(tip experiment)" = "$(sed -n 1p "$IDS")" ]; }
 hot_ok()      { [ "$(tip hotfix)" = "$(g rev-parse main~1)" ]; }
-clean()       { [ -z "$(g status --porcelain)" ]; }
+clean()       { own_repo && [ -z "$(g status --porcelain | grep -v -e '\.DS_Store' -e 'Thumbs\.db')" ]; }
 a_count()     { [ "$(ans branches)" = "4" ]; }
 a_word()      { case "$(ans branch-is | tr 'A-Z' 'a-z')" in pointer|label|reference|"movable pointer") return 0;; *) return 1;; esac; }
 

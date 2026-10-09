@@ -14,13 +14,13 @@
 
 \section{Why branches?}
 
-Imagine you are writing a report that works. You want to try a risky new structure, but you do not want to wreck the good version, and a friend wants to fix typos at the same time. In Lecture 0 we met the old habit of copying the folder (\code{report\_v2\_final}). A \textbf{branch} is Git's clean answer: a separate line of work inside the same repository. You can experiment freely on a branch, and the stable work stays untouched until you decide to combine them (Lecture 5).
+Imagine you are writing a report that is in good shape. You want to try a risky new structure, but you do not want to wreck the good version, and a friend wants to fix typos at the same time. In Lecture 0 we met the old habit of copying the folder (\code{report\_v2\_final}). A \textbf{branch} is Git's clean answer: a separate line of work inside the same repository. You can experiment freely on a branch, and the stable work stays untouched until you decide to combine them (Lecture 5).
 
 \begin{keyidea}
 A branch lets you work on an idea \emph{in isolation}. If the idea is good you keep it; if it is bad you drop it. Either way the main line of work was never at risk.
 \end{keyidea}
 
-Every repository already has one branch, created by your first commit: \code{main}. In this lecture we create more and move between them. We use a practice repository with the same history on every computer. From the course folder run:
+Every repository already has one branch, usually named \code{main} (the name you set in Homework 0.3), which \code{git init} created. In this lecture we create more and move between them. We use a practice repository with the same history on every computer. From the course folder run:
 
 \begin{lstlisting}
 $ bash codeHints/L04/setup_demo4.sh
@@ -122,12 +122,12 @@ Switched to branch 'waffles'
 The two steps are so common that there is a shortcut: \code{git switch -c waffles} \textbf{c}reates the branch and switches to it in one go. To see which branch you are on, \code{git status} says \code{On branch ...} on its first line, and \code{git branch --show-current} prints just the name.
 
 \begin{quickfact}
-\code{git switch} arrived in Git 2.23 (2019). Before that, one command did several jobs: \code{git checkout waffles} switched branches and \code{git checkout -b waffles} created one. You will meet \code{checkout} in many tutorials; for switching branches it does the same as \code{switch}. We use \code{switch} because it does one thing only.
+\code{git switch} arrived in Git 2.23 (2019). Before that, one command did several jobs: \code{git checkout waffles} switched branches and \code{git checkout -b waffles} created one. You will meet \code{checkout} in many tutorials; for branches it does the same as \code{switch}. We use \code{switch} because it does one thing only.
 \end{quickfact}
 
 \subsection{Choosing a name}
 
-Branch names should be short, lowercase and descriptive of the idea, with hyphens instead of spaces: \code{waffles}, \code{fix-typo}, \code{add-login}. Spaces are not allowed, and a slash is fine for grouping (\code{feature/login}). Use one branch per idea.
+Use short, lowercase names that describe the idea, with hyphens instead of spaces (spaces are not allowed): \code{waffles}, \code{fix-typo}, \code{add-login}. One branch per idea.
 
 \section{Committing on a branch}
 
@@ -144,7 +144,7 @@ ed2aed8 Add pancake recipe
 03a7a32 Add README
 \end{lstlisting}
 
-(The new ID will be different on your computer, because it depends on the time of the commit.) Git created the commit and moved the \emph{current} branch, \code{waffles}, forward. \code{main} did not move:
+(The ID of any commit \emph{you} make will differ from the one printed here, because it depends on the time of the commit. Only the three setup commits \code{03a7a32}, \code{ed2aed8} and \code{ad13d7b} are the same on every computer, and the IDs of later commits below, such as \code{12c4aa1} and \code{d3cf462}, will differ on yours.) Git created the commit and moved the \emph{current} branch, \code{waffles}, forward. \code{main} did not move:
 
 \begin{figure}[H]
 \centering
@@ -183,12 +183,12 @@ Crepes: flour, milk, eggs, butter
 The waffle recipe is not lost: it is saved in the commit that \code{waffles} points to. Switch back and the file returns. This is the superpower of branches: one folder, several versions of the project, one command to change between them.
 
 \begin{tryit}
-In \code{demo4}, switch between \code{main} and \code{waffles} a few times, each time running \code{cat recipes.txt} and \code{git status}. Watch the file change, and note that \code{git status} always names the current branch.
+In \code{demo4}, switch between \code{main} and \code{waffles} a few times, each time running \code{cat recipes.txt} and \code{git status}. Watch the file change, and note that \code{git status} always names the current branch. \textbf{Finish on \code{main}} (check with \code{git branch --show-current}), because the next section continues from there.
 \end{tryit}
 
 \section{Diverging history}
 
-Now work on \code{main} as well. We are on \code{main} after the switch; add a muffin recipe:
+Now work on \code{main} as well. Make sure you are on \code{main}, then add a muffin recipe:
 
 \begin{lstlisting}
 $ echo "Muffins: flour, milk" >> recipes.txt
@@ -223,7 +223,7 @@ The history has \emph{forked}. Both new commits have the crepe commit as their p
 \label{fig:diverge}
 \end{figure}
 
-To read the graph: each \code{*} is a commit; the lines show how commits connect; the labels in brackets are branch names. \code{--all} shows every branch (without it, \code{git log} shows only the history of the current one) and \code{--graph} draws the lines. This is the command to run whenever you wonder ``what does my history look like?''
+In the graph each \code{*} is a commit, lines show how commits connect, and labels in brackets are branch names. \code{--all} shows every branch (otherwise only the current one's history) and \code{--graph} draws the lines. Run this whenever you wonder ``what does my history look like?''.
 
 \begin{lstlisting}
 $ git branch -v
@@ -239,21 +239,7 @@ The most common branch mistake is committing on the wrong branch because you for
 
 \section{Switching with uncommitted changes}
 
-What happens if you have edited files and switch? Git protects your work. Two cases:
-
-\textbf{The branches do not disagree about the files you changed.} The changes simply come along:
-
-\begin{lstlisting}
-$ echo "draft" > ideas.txt          # a brand-new file
-$ git switch waffles
-Switched to branch 'waffles'
-$ git status --short
-?? ideas.txt
-\end{lstlisting}
-
-(Switch back with \code{git switch main} and delete the file with \code{rm ideas.txt} before the next example.)
-
-\textbf{The target branch has a different version of a file you edited.} Git refuses rather than overwrite your edit:
+What happens if you have edited a file and switch? Git protects your work. If the branches have the \emph{same} version of the file you edited, or you only added brand-new files, your changes simply come along. But if the target branch has a \emph{different} version of a file you edited, Git refuses rather than overwrite your edit:
 
 \begin{lstlisting}
 $ echo "Scones: flour, butter" >> recipes.txt
@@ -263,6 +249,8 @@ error: Your local changes to the following files would be overwritten by checkou
 Please commit your changes or stash them before you switch branches.
 Aborting
 \end{lstlisting}
+
+(Here ``checkout'' just means the file rewriting that a switch does. The wording varies a little between Git versions.)
 
 Nothing has changed: you are still on \code{main}, and your edit is intact. (To continue with the lecture, discard the experiment with \code{git restore recipes.txt}.) In a real situation you have three options: \emph{commit} the change (the usual choice), \emph{discard} it with \code{git restore recipes.txt} if it was junk (Lecture 3), or save it for later with \code{git stash} (Lecture 10).
 
@@ -278,10 +266,10 @@ Good habit: commit, or at least check \code{git status}, before you switch branc
 \toprule
 Command & What it does \\
 \midrule
-\code{git switch -c name start} & Create a branch that starts at \code{start}, a commit ID or another branch (for example \code{ed2aed8} or \code{main\textasciitilde{}1}), and switch to it. Without \code{start} it begins at the current commit. \\
+\code{git switch -c name start} & Create a branch that starts at \code{start}, a commit ID or another branch (for example \code{ed2aed8}, or \code{main\textasciitilde{}1}, the parent of the tip of \code{main}; the \code{\textasciitilde{}} notation from Lecture 3 works on branch names too), and switch to it. Without \code{start} it begins at the current commit. \\
 \code{git branch name start} & The same, but do not switch. \\
 \code{git branch -m old new} & Rename a branch (\textbf{m}ove). \\
-\code{git branch -d name} & Delete a branch, but only if its work is safely included in another branch. \\
+\code{git branch -d name} & Delete a branch, but only if its commits are already included in the branch you are on (Git calls this ``merged''). \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -297,10 +285,10 @@ error: The branch 'waffles' is not fully merged.
 If you are sure you want to delete it, run 'git branch -D waffles'.
 \end{lstlisting}
 
-The first deletion worked because \code{trial} points at a commit that is already part of \code{main}, so nothing would be lost. \code{waffles} has a commit that exists nowhere else, so Git refuses.
+The first deletion worked because \code{trial} points at a commit that is already part of the branch you are on (\code{main}), so nothing would be lost. \code{waffles} has a commit that exists nowhere else, so Git says it is ``not fully merged'' (``merged'' means: its commits are already reachable from your current branch; Lecture 5 shows how to merge) and refuses.
 
 \begin{pitfall}
-Deleting a branch deletes only the label, never the files in your folder. But the commits that only that branch pointed to become unreachable. That is why \code{-d} refuses to delete a branch with work that exists nowhere else, as above. \code{git branch -D} forces the deletion. Do not use \code{-D} until you understand why (Lecture 10 shows how such commits can still be rescued for a while). For now, if Git refuses, believe it. (The exact wording of the error varies a little between Git versions.)
+Deleting a branch deletes only the label, never the files in your folder. But commits that only that branch led to would have no label leading to them any more. That is why \code{-d} refuses to delete a branch with work that exists nowhere else, as above. \code{git branch -D} forces the deletion. Do not use \code{-D} until you understand why (Lecture 10 shows how such commits can still be rescued for a while). For now, if Git refuses, believe it. (The exact wording of the error varies a little between Git versions.)
 \end{pitfall}
 
 The usual life cycle is: create, work, merge (Lecture 5), delete with \code{-d}.
@@ -335,8 +323,9 @@ ed2aed8 Add pancake recipe
 \label{fig:detached}
 \end{figure}
 
-Git calls this a \emph{detached HEAD}. It sounds alarming but is harmless as long as you only look. The danger: if you commit while detached, the new commit has no branch label, and when you switch away it becomes hard to find. To leave, just switch back: \code{git switch main}. If you \emph{did} make useful commits while detached, give them a branch straight away: \code{git switch -c rescue}.
+Git calls this a \emph{detached HEAD}. You may reach it by accident with \code{git checkout <commit-id>}, where Git prints a long ``detached HEAD'' warning; it is the same state. It sounds alarming but is harmless as long as you only look. The danger: if you commit while detached, the new commit has no branch label, and when you switch away it becomes hard to find. To leave, just switch back: \code{git switch main}. If you \emph{did} make useful commits while detached, give them a branch straight away: \code{git switch -c rescue}.
 
+\Needspace{8\baselineskip}
 \section{Homework 4}
 
 \begin{homework}{4: Branching out}
@@ -349,11 +338,11 @@ You get two commits on \code{main} and a misspelled branch. Look with \code{git 
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[4.1 Branch] Create a branch \code{shopping} and switch to it.
-\item[4.2 Work on it] On \code{shopping}, create \code{shopping.txt} containing \code{milk}; commit it as \code{Add shopping list}. Add a second line \code{eggs} and commit that as \code{Add eggs}.
+\item[4.2 Work on it] On \code{shopping}, create \code{shopping.txt} containing exactly the line \code{milk}; commit it as \code{Add shopping list}. Add a second line \code{eggs} (so the file has exactly the two lines \code{milk} and \code{eggs}) and commit that as \code{Add eggs}.
 \item[4.3 Back to main] Switch to \code{main}; check that \code{shopping.txt} is gone. Create \code{notes.txt} (any content) and commit it as \code{Add notes}.
-\item[4.4 Rename] Fix the misspelled branch: rename \code{experimnt} to \code{experiment}. It must keep pointing at the first commit.
-\item[4.5 Start point] Without switching, create a branch \code{hotfix} that points at the commit just before the newest commit on \code{main} (that is, at \code{main\textasciitilde{}1}).
-\item[4.6 Finish and answer] Switch back to \code{main} and leave the working directory clean. In \code{practice/hw4\_answers.txt} (outside the repository) write two lines:
+\item[4.4 Rename] Rename the misspelled branch \code{experimnt} to \code{experiment}.
+\item[4.5 Start point] Without switching, create a branch \code{hotfix} at \code{main\textasciitilde{}1}.
+\item[4.6 Finish and answer] End on \code{main} with a clean working directory. In \code{practice/hw4\_answers.txt} (outside the repository; write it with \code{printf} or \code{echo}) write two lines:
 \begin{lstlisting}
 branches=<how many branches the repository has now>
 branch-is=<one word: what a branch is, technically>
