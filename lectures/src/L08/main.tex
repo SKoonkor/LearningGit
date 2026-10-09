@@ -46,7 +46,7 @@ The branch \code{cookies} has three messy commits and forked from \code{Add reci
 
 \section{Rebase: replaying commits on a new base}
 
-You know one way to bring \code{cookies} up to date with \code{main}: merge \code{main} into it (Lecture 5). \textbf{Rebase} does it differently. It takes your commits, one at a time, and \emph{replays} them on top of the new tip of \code{main}, as if you had started your work from there.
+You know one way to bring \code{cookies} up to date with \code{main}: merge \code{main} into it (Lecture 5). (\code{cookies} is a branch that only \emph{you} work on, which is what makes the rewriting below allowed; Section~\ref{sec:golden} explains why that matters.) \textbf{Rebase} does it differently. It takes your commits, one at a time, and \emph{replays} them on top of the new tip of \code{main}, as if you had started your work from there.
 
 \begin{lstlisting}
 $ git switch cookies
@@ -61,7 +61,22 @@ $ git log --oneline --graph --decorate -5
 * 699939b Add recipes
 \end{lstlisting}
 
-(Git also prints progress lines such as \code{Rebasing (2/3)}, left out here.) The history is now one straight line: no fork, no merge commit.
+(Git also prints progress lines such as \code{Rebasing (2/3)}, left out here.) The history is now one straight line: no fork, no merge commit. But the \emph{old} commits are not gone; the server's \code{origin/cookies} still points at them:
+
+\begin{lstlisting}
+$ git log --oneline --graph --all --decorate
+* 5bfcea2 (HEAD -> cookies) fix typo in cookies
+* dd806cd wip
+* 539c33d Add cookie recipe
+* e04fe10 (origin/main, origin/HEAD, main) Add muffin recipe
+| * 336710f (origin/cookies) fix typo in cookies
+| * a7dfee0 wip
+| * 45b2a27 Add cookie recipe
+|/
+* 699939b Add recipes
+\end{lstlisting}
+
+Two versions of the same work now exist: your new copies, and the originals that the server still holds. Remember this picture; it explains why the push later is refused.
 
 \begin{figure}[H]
 \centering
@@ -80,14 +95,17 @@ $ git log --oneline --graph --decorate -5
   \draw[link] (q3)--(q2); \draw[link] (n1)--(q3); \draw[link] (n2)--(n1); \draw[link] (n3)--(n2);
   \node[branchtag] at (2.6,-3.3) {main}; \draw[link] (2.6,-3.55)--(2.6,-3.95);
   \node[branchtag] at (10.4,-3.3) {cookies}; \draw[link] (10.4,-3.55)--(10.4,-3.95);
-  \node[font=\scriptsize,text=green!40!black,anchor=north] at (7.8,-4.95) {three \emph{new} commits (copies) with new IDs};
+  \node[oldc] (p1) at (5.2,-6.0) {45b2a27}; \node[oldc] (p2) at (7.8,-6.0) {a7dfee0}; \node[oldc] (p3) at (10.4,-6.0) {336710f};
+  \draw[link,black!45,dashed] (p1) to[bend right=12] (q2); \draw[link,black!45,dashed] (p2)--(p1); \draw[link,black!45,dashed] (p3)--(p2);
+  \node[font=\scriptsize,text=green!40!black,anchor=south] at (7.8,-3.85) {new commits (copies) with new IDs};
+  \node[font=\scriptsize,text=black!60,anchor=north] at (7.8,-6.55) {the old commits, left behind (dashed)};
 \end{tikzpicture}
-\caption{Rebase replays the three commits on top of \code{main}. The copies have the same changes and messages but \emph{new IDs}, because their parent is different. The old commits (\code{45b2a27} and so on) are left behind.}
+\caption{Rebase replays the three commits on top of \code{main}. The copies have the same changes and messages but \emph{new IDs}, because their parent is different. The old commits (dashed, \code{45b2a27} and so on) are left behind.}
 \label{fig:rebase}
 \end{figure}
 
 \begin{keyidea}
-A commit's ID depends on its parent. If you move a commit onto a different parent, you get a \emph{different commit}: same change, same message, new ID. Rebase therefore does not move commits; it \textbf{creates copies} and abandons the old ones. That is what ``rewriting history'' means.
+A commit's ID depends on its parent. If you move a commit onto a different parent, you get a \emph{different commit}: same change, same message, new ID. Rebase therefore does not move commits; it \textbf{creates copies} and abandons the old ones. That is what ``rewriting history'' means. (You have seen it before: \code{git commit --amend} in Lecture 3 also gave you a new ID.)
 \end{keyidea}
 
 \subsection{Merge or rebase?}
@@ -108,10 +126,11 @@ Safe on shared branches & yes & \textbf{no} (see the golden rule) \\
 
 Neither is ``right''. Merge records exactly what happened. Rebase gives a tidier story. Many teams use rebase for their \emph{own} work in progress and merge for the finished result.
 
-\section{Conflicts during a rebase}
+\section{Conflicts during a rebase}\label{sec:conflicts}
 
 Because rebase replays commits one by one, a conflict can appear in the middle. Rebase the branch \code{syrup}: it edits the same line that \code{main}'s newest commit sits right next to.
 
+\Needspace{20\baselineskip}
 \begin{lstlisting}
 $ git switch syrup
 $ git rebase main
@@ -131,12 +150,25 @@ Pancakes: flour, milk, eggs, syrup
 >>>>>>> 1f323f7 (Pancakes with syrup)
 \end{lstlisting}
 
-The rebase is paused, halfway, exactly like a conflicted merge. The procedure is the one from Lecture 5, with a different last step:
+The rebase is paused, halfway, exactly like a conflicted merge. \code{git status} confirms it, and you will see that you are temporarily ``on no branch'':
+
+\begin{lstlisting}
+$ git status
+interactive rebase in progress; onto e04fe10
+Last command done (1 command done):
+   pick 1f323f7 Pancakes with syrup
+...
+$ git status -sb
+## HEAD (no branch)
+UU recipes.txt
+\end{lstlisting}
+
+That is normal during a rebase. The procedure is the one from Lecture 5, with a different last step:
 
 \begin{enumerate}
   \item Edit the file: choose or combine, remove the three marker lines.
   \item \code{git add recipes.txt} (``resolved'').
-  \item \code{git rebase --continue} (not \code{git commit}). Git then replays the next commit, if any.
+  \item \code{git rebase --continue} (not \code{git commit}). Git then replays the next commit, if any. \emph{An editor may open} showing the commit's original message: just save and close it (see the box on editors below).
 \end{enumerate}
 
 \begin{lstlisting}
@@ -145,6 +177,10 @@ $ git add recipes.txt
 $ git rebase --continue
 Successfully rebased and updated refs/heads/syrup.
 \end{lstlisting}
+
+\begin{pitfall}
+\textbf{The editor.} Git sometimes opens a text editor, often \code{vim}, which does not accept normal typing. Survival recipe: press \code{i} to start typing; move with the arrow keys; delete with Backspace or Delete; press \code{Esc}; type \code{:wq} and press Enter to save and quit. (If \code{:wq} just shows up as text, you were still in insert mode: press \code{Esc} first.) If the editor shows a message you only need to accept, do just \code{Esc}, \code{:wq}, Enter. In \code{nano}, save with Ctrl+O then Enter and quit with Ctrl+X. You can choose another editor once and for all, for example \code{git config --global core.editor "nano"} or, for VS Code, \code{git config --global core.editor "code --wait"}.
+\end{pitfall}
 
 \begin{pitfall}
 \textbf{The two sides are swapped compared with a merge.} During a rebase, the part above \code{=======} (labelled \code{HEAD}) is the branch you are rebasing \emph{onto}, here \code{main}. The part below is \emph{your own commit} being replayed. Read the labels, not the order, and keep what you want.
@@ -166,64 +202,6 @@ Command & Effect \\
 \end{tabular}
 \end{center}
 
-\section{The golden rule}
-
-\begin{keyidea}
-\textbf{Never rebase commits that other people already have.} Rebase only commits that exist solely on your computer, or on a branch that only you use.
-\end{keyidea}
-
-Why? Rebasing replaces commits with copies. If a teammate has the \emph{old} commits and you publish the \emph{copies}, the two of you now disagree about what the history is:
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}
-  \node[cbx] (a) at (0,0) {R};
-  \node[oldc] (o1) at (2.6,0.9) {C1}; \node[oldc] (o2) at (5.2,0.9) {C2}; \node[cbx] (t3) at (7.8,0.9) {T3};
-  \node[newc] (n1) at (2.6,-0.9) {C1'}; \node[newc] (n2) at (5.2,-0.9) {C2'};
-  \draw[link] (o1)--(a); \draw[link] (o2)--(o1); \draw[link] (t3)--(o2);
-  \draw[link] (n1)--(a); \draw[link] (n2)--(n1);
-  \node[font=\scriptsize,anchor=west,align=left] at (8.9,0.9) {your teammate still has\\C1, C2 and added T3 on top};
-  \node[font=\scriptsize,anchor=west,align=left,text=green!40!black] at (6.3,-0.9) {you rebased and force-pushed: C1', C2'\\(same changes, different commits)};
-\end{tikzpicture}
-\caption{The teammate's \code{T3} sits on the old \code{C2}, which no longer exists on the server. Combining the two histories duplicates \code{C1} and \code{C2} and invites conflicts that nobody caused.}
-\label{fig:golden}
-\end{figure}
-
-Commits you have only locally are safe to rewrite, and so is a branch that you alone work on, even if you pushed it, \emph{as long as you are sure no one else has fetched it}. Never rewrite \code{main} or a branch your team shares.
-
-\subsection{Pushing rewritten history}
-
-After rebasing \code{cookies}, your local branch has copies and the server still has the originals. A normal push is refused, because it would not just add commits, it would replace them:
-
-\begin{lstlisting}
-$ git push
-To github.com:you/recipes.git
- ! [rejected]        cookies -> cookies (non-fast-forward)
-error: failed to push some refs to 'github.com:you/recipes.git'
-hint: Updates were rejected because the tip of your current branch is behind
-\end{lstlisting}
-
-This is the situation for which beginners reach for \code{git push --force}, which overwrites the remote branch \emph{unconditionally}. Use the safer cousin instead:
-
-\begin{lstlisting}
-$ git push --force-with-lease
-To github.com:you/recipes.git
- + 336710f...8d96fcc cookies -> cookies (forced update)
-\end{lstlisting}
-
-\textbf{\code{--force-with-lease}} means ``replace the remote branch, but \emph{only if it is still where I last saw it}''. If someone pushed in the meantime, it refuses, and you find out before you destroy their work:
-
-\begin{lstlisting}
-$ git push --force-with-lease
- ! [rejected]        sale -> sale (stale info)
-\end{lstlisting}
-
-(Here a friend had pushed a commit to \code{sale} after your last \code{git fetch}.) When you see \code{stale info}, fetch, look at what arrived, and decide; do not escalate to \code{--force}.
-
-\begin{pitfall}
-Even \code{--force-with-lease} must not be used on \code{main} or any shared branch. Hosting sites can forbid it with \emph{branch protection}; Lecture 9 shows how.
-\end{pitfall}
-
 \section{Interactive rebase: tidying your commits}
 
 The most useful form of rebase lets you \emph{edit the list of commits}. Our \code{cookies} branch has the story ``Add cookie recipe, wip, fix typo''. We want a single commit. Start an interactive rebase onto \code{main}:
@@ -232,7 +210,7 @@ The most useful form of rebase lets you \emph{edit the list of commits}. Our \co
 $ git rebase -i main
 \end{lstlisting}
 
-(You may also say \code{git rebase -i HEAD\textasciitilde{}3}: ``the last three commits''.) Git opens your editor with a \textbf{todo list}, oldest commit first, one command per line:
+(You may also say \code{git rebase -i HEAD\textasciitilde{}3}: ``the last three commits''.) Git opens your editor with a \textbf{todo list}, one command per line, \emph{oldest commit first} (the opposite of \code{git log}, which shows the newest first). In short: \code{fixup} means ``squash this commit into the one above and throw away its message''; the table below lists all commands.
 
 \begin{lstlisting}
 pick 539c33d Add cookie recipe
@@ -251,7 +229,7 @@ pick 5bfcea2 fix typo in cookies
 # (...more commands and a warning about deleted lines...)
 \end{lstlisting}
 
-Change the word at the start of a line to tell Git what to do with that commit. To fold the second and third commit into the first, replace \code{pick} by \code{fixup} on those lines, then save and close the editor:
+Change the word at the start of a line to tell Git what to do with that commit: in the editor, delete \code{pick} and type the new word (\code{fixup}, or just its letter \code{f}; \code{r} for \code{reword}, \code{s}, \code{d}). To fold the second and third commit into the first, replace \code{pick} by \code{fixup} on those lines, then save and close the editor (\code{Esc}, \code{:wq}, Enter; see the box on editors in Section~\ref{sec:conflicts}):
 
 \begin{lstlisting}
 pick 539c33d Add cookie recipe
@@ -285,20 +263,83 @@ Command & What it does \\
 \end{tabular}
 \end{center}
 
-You can also \emph{reorder} commits by moving lines. The commits are replayed from top to bottom. To change your mind at any moment before you finish: \code{git rebase --abort}.
-
-\begin{pitfall}
-\textbf{The editor.} If Git opens \code{vim} and you do not know it: press \code{i} to start typing, edit the text, press \code{Esc}, then type \code{:wq} and press Enter to save and quit (\code{:q!} quits without saving, which cancels the rebase). Or choose an editor you know, for example \code{git config --global core.editor "nano"}.
-\end{pitfall}
+You can also \emph{reorder} commits by moving lines. The commits are replayed from top to bottom. Things that go wrong: a \code{fixup} on the \emph{first} line fails (``cannot fixup without a previous commit''); a misspelt command word stops the rebase (fix the list with \code{git rebase --edit-todo}); and if you quit the editor without changing anything, Git simply replays every commit as \code{pick}. To cancel before you finish: delete every line of the list and save, or run \code{git rebase --abort} later.
 
 \begin{quickfact}
 Shortcut for the future: \code{git commit --fixup <id>} makes a commit that is marked as a fix for an earlier commit, and \code{git rebase -i --autosquash main} then arranges and folds it automatically. You do not need it now.
 \end{quickfact}
 
+\section{The golden rule}\label{sec:golden}
+
+\begin{keyidea}
+\textbf{Never rebase commits that other people already have.} Rebase only commits that exist solely on your computer, or on a branch that only you use.
+\end{keyidea}
+
+Why? Rebasing replaces commits with copies. If a teammate has the \emph{old} commits and you publish the \emph{copies}, the two of you now disagree about what the history is:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[cbx] (a) at (0,0) {R};
+  \node[oldc] (o1) at (2.6,0.9) {C1}; \node[oldc] (o2) at (5.2,0.9) {C2}; \node[cbx] (t3) at (7.8,0.9) {T3};
+  \node[newc] (n1) at (2.6,-0.9) {C1'}; \node[newc] (n2) at (5.2,-0.9) {C2'};
+  \draw[link] (o1)--(a); \draw[link] (o2)--(o1); \draw[link] (t3)--(o2);
+  \draw[link] (n1)--(a); \draw[link] (n2)--(n1);
+  \node[font=\scriptsize,anchor=west,align=left] at (8.9,0.9) {your teammate still has\\C1, C2 and added T3 on top};
+  \node[font=\scriptsize,anchor=west,align=left,text=green!40!black] at (6.3,-0.9) {you rebased and force-pushed: C1', C2'\\(same changes, different commits)};
+\end{tikzpicture}
+\caption{The teammate's \code{T3} sits on the old \code{C2}, which no longer exists on the server. Combining the two histories duplicates \code{C1} and \code{C2} and invites conflicts that nobody caused.}
+\label{fig:golden}
+\end{figure}
+
+What your teammate sees: after they \code{git pull}, Git finds your new \code{C1'} and \code{C2'} on the server and their own \code{C1} and \code{C2} locally, which look like \emph{different} commits. They get a merge full of duplicated changes or conflicts that nobody caused, and your rewritten history spreads confusion across the team.
+
+Commits you have only locally are safe to rewrite, and so is a branch that you alone work on, even if you pushed it, \emph{as long as you are sure no one else has fetched it}. Never rewrite \code{main} or a branch your team shares.
+
+\subsection{Pushing rewritten history}
+
+After the rebase and the tidy-up of \code{cookies}, your local branch has copies and the server still has the originals (the picture after the first rebase). A normal push is refused, because it would not just add commits, it would replace them:
+
+\begin{lstlisting}
+$ git push
+To github.com:you/recipes.git
+ ! [rejected]        cookies -> cookies (non-fast-forward)
+error: failed to push some refs to 'github.com:you/recipes.git'
+hint: Updates were rejected because the tip of your current branch is behind
+\end{lstlisting}
+
+This is the situation for which beginners reach for \code{git push --force}, which overwrites the remote branch \emph{unconditionally}. Use the safer cousin instead:
+
+\begin{lstlisting}
+$ git push --force-with-lease
+To github.com:you/recipes.git
+ + 336710f...8d96fcc cookies -> cookies (forced update)
+\end{lstlisting}
+
+\textbf{\code{--force-with-lease}} means ``replace the remote branch, but \emph{only if it is still where my last \code{git fetch} saw it}'' (your \code{origin/cookies}). If someone pushed in the meantime, it refuses, and you find out before you destroy their work. To try it yourself on the branch \code{sale}: rewrite its commit, let a friend push to it, then push:
+
+\Needspace{9\baselineskip}
+\begin{lstlisting}
+$ git switch sale
+$ git commit --amend -m "Add sale banner (reworded)"       # a rewrite
+$ bash codeHints/L08/friend8.sh sale                        # (course folder) a friend pushes to sale
+$ git push --force-with-lease
+To github.com:you/recipes.git
+ ! [rejected]        sale -> sale (stale info)
+error: failed to push some refs to 'github.com:you/recipes.git'
+\end{lstlisting}
+
+``Stale info'' means: the remote branch has moved since you last looked. Do \emph{not} escalate to \code{--force}, which would erase your friend's commit. Instead fetch, read what arrived (\code{git log origin/sale}), and talk to your friend. Note the limit of the lease: after a \code{git fetch} (also an automatic one by your editor), Git has seen the friend's commit, and a later \code{--force-with-lease} would overwrite it. The lease is a seat belt, \emph{not} permission to rebase a shared branch.
+
+\begin{pitfall}
+Even \code{--force-with-lease} must not be used on \code{main} or any shared branch. Hosting sites can forbid it with \emph{branch protection}; Lecture 9 shows how.
+\end{pitfall}
+
 \section{Cherry-pick: copying one commit}
 
 Sometimes you want \emph{one} commit from another branch, not the whole branch. The branch \code{sale} has a commit \code{Add sale banner}, and \code{main} should get it now:
 
+\Needspace{11\baselineskip}
 \begin{lstlisting}
 $ git switch main
 $ git cherry-pick 889b766
@@ -316,7 +357,8 @@ $ git cherry-pick 889b766
   \node[cbx] (m) at (2.6,0.9) {e04fe10}; \node[cbx] (s) at (2.6,-0.9) {889b766};
   \node[newc] (c) at (5.2,0.9) {26e9c4f};
   \draw[link] (m)--(r); \draw[link] (s)--(r); \draw[link] (c)--(m);
-  \draw[->,thick,>=Stealth,dashed,orange!70!black] (s.east) to[bend right=0] node[right,font=\scriptsize,align=left,xshift=2pt] {copied by\\\code{git cherry-pick}} (c.south);
+  \draw[->,thick,>=Stealth,dashed,orange!70!black] (s.east) -- (c.south);
+  \node[font=\scriptsize,align=left,orange!60!black,anchor=west] at (5.5,-0.2) {copied by\\\code{git cherry-pick}};
   \node[branchtag] at (6.9,0.9) {main}; \draw[link] (6.2,0.9)--(5.95,0.9);
   \node[branchtag] at (4.5,-0.9) {sale}; \draw[link] (3.9,-0.9)--(3.6,-0.9);
 \end{tikzpicture}
@@ -329,8 +371,19 @@ The copy has a new ID and parent, but the same change, message, author and origi
 Typical uses:
 \begin{itemize}
   \item \textbf{A hotfix} made on one branch that must also go to \code{main}.
-  \item \textbf{A commit made on the wrong branch} (the mistake warned about in Lecture 4): switch to the right branch and cherry-pick the commit there. The copy on the wrong branch must still be removed; that needs \code{git reset}, introduced in Lecture 10.
+  \item \textbf{A commit made on the wrong branch} (the mistake warned about in Lecture 4). Illustration only (do not type this now): you committed ``snickerdoodle'' on \code{main} but it belongs on \code{cookies}.
 \end{itemize}
+
+\begin{lstlisting}
+$ git switch main
+$ git log --oneline -1
+9f74ed1 Add snickerdoodle (wrong branch)
+$ git switch cookies
+$ git cherry-pick 9f74ed1
+[cookies 4be0c21] Add snickerdoodle (wrong branch)
+\end{lstlisting}
+
+The commit is now on the right branch. Its copy on the wrong branch must still be removed; that needs \code{git reset}, introduced in Lecture 10. (The ID of your copy will differ.)
 
 \begin{pitfall}
 Cherry-pick \emph{duplicates} a change. If you later merge the whole branch as well, Git usually recognises the same change and copes, but long-lived copies cause confusing conflicts. Use it for single, deliberate commits, not as a way to move branches around.
@@ -340,25 +393,28 @@ Cherry-pick \emph{duplicates} a change. If you later merge the whole branch as w
 
 In Lecture 6 a push was rejected because the server had a commit you lacked, and \code{git pull} asked you how to reconcile. Merge was one answer. \textbf{Rebase} is the other: put your unpushed commits \emph{on top of} what the server has.
 
+In the demo, your cherry-picked \code{Add sale banner} is a local commit on \code{main} that you have not pushed. Let a friend push to \code{main} (from the course folder: \code{bash codeHints/L08/friend8.sh main}), then:
+
+\Needspace{14\baselineskip}
 \begin{lstlisting}
 $ git push
  ! [rejected]        main -> main (fetch first)
 $ git pull --rebase
 Successfully rebased and updated refs/heads/main.
 $ git log --oneline --graph --decorate -4
-* e3126f3 (HEAD -> main) Add local note
-* 418c700 (origin/main, origin/HEAD) Add friend news
+* 57a80aa (HEAD -> main) Add sale banner
+* 2e17653 (origin/main, origin/HEAD) Add friend news
 * e04fe10 Add muffin recipe
 * 699939b Add recipes
 $ git push
-   418c700..e3126f3  main -> main
+   2e17653..57a80aa  main -> main
 \end{lstlisting}
 
 The result is a straight line with no merge commit. This is safe, because your local commit had not been shared yet, so replacing it by a copy hurts nobody. You can make it the default with \code{git config --global pull.rebase true}; the choice you made in Lecture 6 (\code{false}, merge) was equally valid.
 
 \section{Rebase and GitHub}
 
-Lecture 7 offered three merge buttons. You can now read two of them: \textbf{Squash and merge} is the \code{fixup} of this lecture done by GitHub, and \textbf{Rebase and merge} is a rebase done by GitHub (new commits again, hence the \code{-d} surprise).
+Lecture 7 offered three merge buttons. You can now read two of them: \textbf{Squash and merge} is like the \code{squash}/\code{fixup} of this lecture done by GitHub (many commits become one), and \textbf{Rebase and merge} is a rebase done by GitHub (new commits again, hence the \code{-d} surprise).
 
 A pull request that has fallen behind \code{main} can be brought up to date by merging \code{main} into it (always safe) or by rebasing it and pushing with \code{--force-with-lease}. Choose the rebase \emph{only} when you are the sole author of the branch.
 
@@ -375,12 +431,12 @@ The setup script creates \code{practice/hw8\_server.git}, a shared ``server'' re
 $ bash codeHints/L08/setup_hw8.sh
 $ cd practice
 \end{lstlisting}
-You are the only person working on \code{feature}, so rewriting it is allowed. Do the tasks in order. To start over: \code{setup\_hw8.sh --reset} from the course folder.
+You are the only person working on \code{feature}, so rewriting it is allowed. Rebase and cherry-pick need your Git identity: run \code{git config user.name} and \code{git config user.email} in the clone if you have not set them globally. Do the tasks in order. To start over: \code{setup\_hw8.sh --reset} from the course folder.
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[8.1 Look] Clone the server into \code{hw8}, go in, and run \code{git log --oneline --graph --all --decorate}.
-\item[8.2 Tidy and rebase] On \code{feature} run \code{git rebase -i main}. Turn the five commits into \emph{two}: fold the \code{wip} and \code{fix typo} commits into \code{Add greeting}, fold \code{oops} into \code{add farewell}, and \emph{reword} \code{add farewell} to \code{Add farewell}. The first commit conflicts in \code{README.md}: keep \emph{both} added lines (\code{Maintained by the team.} and \code{Usage: run the greeter.}), remove the markers, \code{git add README.md}, and \code{git rebase --continue}.
-\item[8.3 Check] \code{git log --oneline main..feature} must show exactly two commits, \code{Add greeting} and \code{Add farewell} (oldest first), on top of \code{main}'s newest commit.
+\item[8.2 Tidy and rebase] On \code{feature} run \code{git rebase -i main}. Turn the five commits into \emph{two}: fold the \code{wip} and \code{fix typo} commits into \code{Add greeting}, fold \code{oops} into \code{add farewell}, and \emph{reword} \code{add farewell} to \code{Add farewell}. The first commit conflicts in \code{README.md}: keep \emph{both} added lines (\code{Maintained by the team.} and \code{Usage: run the greeter.}), remove the markers, \code{git add README.md}, and \code{git rebase --continue}. An editor opens \emph{twice} during this task (first for the conflicted commit's message, later for the reword): in both, save and close, and change the text only for the reword.
+\item[8.3 Check] \code{git log --oneline --reverse main..feature} must show exactly two commits, \code{Add greeting} and then \code{Add farewell}, on top of \code{main}'s newest commit.
 \item[8.4 Publish] Try a plain \code{git push} and read the rejection. Then push with \code{git push --force-with-lease}.
 \item[8.5 Cherry-pick] Switch to \code{main}. Find the commit on \code{origin/hotfix} (\code{git log origin/hotfix}) and copy it onto \code{main} with \code{git cherry-pick}. Push \code{main}. (\code{main} must stay a straight line: no merge.)
 \item[8.6 Questions] In \code{practice/hw8\_answers.txt} (next to \code{hw8}, created with \code{printf} or \code{echo}) write three lines: \code{shared-rebase=<yes or no>} (is it fine to rebase commits your teammates have already pulled?), \code{safer-force=<option>} (the safer alternative to \code{--force}), and \code{new-ids=<merge or rebase>} (which of the two creates copies of your commits with new IDs?).

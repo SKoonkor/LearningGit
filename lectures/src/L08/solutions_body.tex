@@ -30,7 +30,7 @@ reword 3b4d390 add farewell
 fixup 83ae7a6 oops
 \end{lstlisting}
 
-Git replays \code{Add greeting} first and stops with a conflict in \code{README.md}, because \code{main}'s newest commit also added a line there. In the file, the part above \code{=======} is \code{main}'s line and the part below is yours; keep both:
+Git replays \code{Add greeting} first and stops with a conflict in \code{README.md} (you also see \code{HEAD (no branch)} in \code{git status}: normal during a rebase), because \code{main}'s newest commit also added a line there. In the file, the part above \code{=======} is \code{main}'s line and the part below is yours; keep both:
 
 \begin{lstlisting}
 # Greeter
@@ -40,16 +40,18 @@ Usage: run the greeter.
 
 \begin{lstlisting}
 $ git add README.md
-$ git rebase --continue          # an editor opens for the reword step:
-                                 # change "add farewell" to "Add farewell", save, close
-$ git log --oneline main..feature
+$ git rebase --continue          # editor 1: the message of "Add greeting": just save and close
+                                 # later, editor 2 (reword): change "add farewell" to
+                                 # "Add farewell", save, close
+$ git log --oneline --reverse main..feature
 $ git push                       # rejected (non-fast-forward): expected
 $ git push --force-with-lease
 $ git log --oneline origin/hotfix -1
 $ git switch main
 $ git cherry-pick <that-id>
 $ git push
-$ printf 'shared-rebase=no\nsafer-force=force-with-lease\nnew-ids=rebase\n' > ../hw8_answers.txt
+$ printf 'shared-rebase=no\nsafer-force=force-with-lease\nnew-ids=rebase\n' \
+    > ../hw8_answers.txt
 \end{lstlisting}
 
 \textbf{8.2.} \code{fixup} merges a commit into the one above and keeps the \emph{upper} message, so \code{wip} and \code{fix typo} disappear into \code{Add greeting}, and \code{oops} into \code{Add farewell}. \code{reword} stops once more so that you can fix the capital letter. If you used \code{squash} instead of \code{fixup}, Git opens an editor with combined messages, and you must delete the extra ones, otherwise the checker finds the wrong messages.
@@ -68,5 +70,5 @@ $ printf 'shared-rebase=no\nsafer-force=force-with-lease\nnew-ids=rebase\n' > ..
   \item Merging \code{main} into \code{feature} instead of rebasing: the history keeps five messy commits plus a merge commit.
   \item Leaving the rebase unfinished (after a conflict you must \code{git add} and \code{git rebase --continue}). \code{git status} says \code{rebase in progress}; the checker's last check fails until you finish or \code{git rebase --abort}.
   \item Using plain \code{git push --force}. It works here, but it is exactly the habit the lecture warns against; use \code{--force-with-lease}.
-  \item Stuck in the vim editor: press \code{Esc}, type \code{:wq}, press Enter. To cancel the whole rebase instead, type \code{:q!} on an empty todo list, or run \code{git rebase --abort}.
+  \item Stuck in the vim editor: press \code{Esc}, type \code{:wq}, press Enter. (\code{:q!} quits \emph{without saving}, which does not cancel a rebase: with an unchanged todo list every commit is simply replayed.) To cancel a rebase, run \code{git rebase --abort}, or delete all lines of the todo list and save.
 \end{itemize}
