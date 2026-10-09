@@ -1,0 +1,295 @@
+\input{../common/preamble}
+\tikzset{
+  cbx/.style={draw,rounded corners,fill=blue!6,minimum width=1.9cm,minimum height=8mm,align=center,font=\scriptsize\ttfamily,inner sep=2pt}}
+\begin{document}
+\lecturetitle{7}{Pull Requests, Forks, and Code Review}{Proposing a change, discussing it, merging it, and working on other people's projects}
+
+\begin{goals}
+\begin{itemize}
+  \item Explain what a pull request is and walk through its life from branch to merge.
+  \item Open a pull request, and review one: comments, suggestions, approve, request changes.
+  \item Choose between GitHub's three merge buttons.
+  \item Contribute to a project you do not own: fork, clone, \code{upstream}, and keeping your fork in sync.
+  \item Inspect and test a teammate's branch on your own computer.
+\end{itemize}
+\end{goals}
+
+\section{What is a pull request?}
+
+In Lecture 5 you merged a branch yourself, with one command. On a team, you usually should \emph{not} do that unilaterally: someone else should look at the change first. A \textbf{pull request} (PR) is a \emph{request to merge a branch}, shown as a web page where people can read the changes, discuss them, and finally merge them.
+
+\begin{keyidea}
+A pull request is a GitHub feature, not a Git command. Git only knows branches and merges. GitHub adds the page around a branch: the list of changes, the conversation, the approvals, and a button to merge. The name comes from the maintainer \emph{pulling} your work into their repository.
+\end{keyidea}
+
+The whole life of a change on a team looks like this:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  blk/.style={draw,rounded corners,fill=blue!6,minimum width=2.7cm,minimum height=11mm,align=center,font=\scriptsize,inner sep=3pt},
+  hum/.style={blk,fill=orange!14},
+  arr/.style={->,thick,>=Stealth}]
+  \node[blk] (b1) at (0,0) {1.\ branch\\\code{git switch -c}};
+  \node[blk] (b2) at (3.3,0) {2.\ commit\\\code{git commit}};
+  \node[blk] (b3) at (6.6,0) {3.\ push\\\code{git push -u}};
+  \node[hum] (b4) at (9.9,0) {4.\ open the\\pull request};
+  \node[hum] (b5) at (9.9,-2.1) {5.\ review:\\comment, approve};
+  \node[hum] (b6) at (6.6,-2.1) {6.\ merge\\(button)};
+  \node[blk] (b7) at (3.3,-2.1) {7.\ delete branch,\\\code{git pull}};
+  \draw[arr] (b1)--(b2); \draw[arr] (b2)--(b3); \draw[arr] (b3)--(b4); \draw[arr] (b4)--(b5);
+  \draw[arr] (b5)--(b6); \draw[arr] (b6)--(b7);
+  \draw[arr,dashed,rounded corners] (b5.east) -- ++(1.1,0) |- ($(b2.north)+(0,0.7)$) -- (b2.north);
+  \node[font=\scriptsize,anchor=west,align=left] at (11.3,-1.0) {changes\\requested:\\commit more,\\push again};
+\end{tikzpicture}
+\caption{The pull-request workflow. Orange steps happen on the website; blue steps are the Git commands you already know. If the reviewer asks for changes (dashed), you commit more on the same branch and push; the pull request updates by itself.}
+\label{fig:prflow}
+\end{figure}
+
+\section{Opening a pull request}
+
+Suppose you work in a repository you may push to (your own, or a team's where you are a \emph{collaborator}). Create a branch, commit, and push it, exactly as in Lecture 6:
+
+\begin{lstlisting}
+$ git switch -c add-note
+$ echo "Remember to drink water." > note.md
+$ git add note.md
+$ git commit -m "Add a hydration note"
+$ git push -u origin add-note
+\end{lstlisting}
+
+Now open the repository on github.com. Right after the push a yellow banner appears with a button \textbf{Compare \& pull request} (otherwise: \textbf{Pull requests $\rightarrow$ New pull request}). The form asks:
+
+\begin{itemize}
+  \item \textbf{base} (the branch you want to merge \emph{into}, usually \code{main}) and \textbf{compare} (your branch). Check them: ``merge \code{add-note} into \code{main}''.
+  \item A \textbf{title}, in the style of a commit message: short and imperative.
+  \item A \textbf{description}: \emph{what} you changed and \emph{why}, and anything the reviewer should look at. (Use \code{Closes \#12} to link an issue; Lecture 9.)
+\end{itemize}
+
+Press \textbf{Create pull request}. You get a page with the conversation, the list of commits, and a \textbf{Files changed} tab. That tab is the same comparison as \code{git diff main...add-note} on your computer.
+
+\begin{quickfact}
+The three dots in \code{git diff main...add-note} mean ``the changes on \code{add-note} since it split off from \code{main}''. That is exactly what a pull request shows: your work, without whatever else happened on \code{main} meanwhile. (With two dots, \code{main..add-note}, Git compares the two branch tips directly.)
+\end{quickfact}
+
+\begin{quickfact}
+A good pull request is \emph{small} (one idea, a few files) with a clear title and description. Reviewers read small requests carefully and big ones badly. If your work is not ready, choose \textbf{Create draft pull request}.
+\end{quickfact}
+
+\section{Reviewing a pull request}
+
+A \textbf{review} is a colleague reading your change before it joins \code{main}. Reasons: catching mistakes, sharing knowledge, keeping the code consistent. Nobody is perfect, and fresh eyes find typos you cannot see.
+
+As a reviewer, open the \textbf{Files changed} tab:
+
+\begin{itemize}
+  \item Hover over a line number and click the blue \textbf{+} to add an \emph{inline comment} on that line.
+  \item Instead of describing a fix, you can \textbf{suggest} it: the \emph{Add a suggestion} button in the comment box inserts a block with the corrected text. The author can accept it with one click.
+  \item When you have read everything, press \textbf{Review changes} and choose one of three verdicts:
+\end{itemize}
+
+\begin{center}
+\small
+\begin{tabular}{@{}l >{\raggedright\arraybackslash}p{9.4cm}@{}}
+\toprule
+Verdict & Meaning \\
+\midrule
+\textbf{Comment} & General feedback, no decision. \\
+\textbf{Approve} & ``This is good to merge.'' \\
+\textbf{Request changes} & ``Please fix the points I raised first.'' \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+As the author, you answer in the conversation and \emph{fix by committing}: make the change on your branch and push it. You do not open a new request; the same pull request picks up the new commits. When a comment is dealt with, mark the conversation as resolved.
+
+\begin{keyidea}
+Review the \emph{code}, never the person. Be specific (``this variable name is confusing: maybe \code{total\_price}?''), explain why, say what is good too, and ask questions rather than issue orders. When you receive a review, remember that every comment is about the change, not about you.
+\end{keyidea}
+
+\section{Merging: three buttons}
+
+When the review is positive, the green merge button offers three ways to merge:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.93,transform shape,
+  cbx/.style={draw,rounded corners,fill=blue!6,minimum width=1.0cm,minimum height=6.5mm,align=center,font=\scriptsize\ttfamily,inner sep=1pt},
+  new/.style={cbx,fill=green!15},
+  ttl/.style={font=\small\bfseries,align=center}]
+  % common history: base
+  \foreach \i/\x/\t in {a/0/{Create a merge commit},b/5.6/{Squash and merge},c/11.2/{Rebase and merge}} {
+    \node[ttl] at (\x+1.3,2.3) {\t};
+    \node[cbx] (b\i) at (\x,0) {M1};
+    \node[cbx] (m\i) at (\x+1.3,0.8) {M2};
+    \draw[link] (m\i)--(b\i);
+  }
+  % merge commit
+  \node[cbx] (f1) at (1.5,-0.9) {F1}; \node[cbx] (f2) at (2.7,-0.9) {F2};
+  \draw[link] (f1)--(ba); \draw[link] (f2)--(f1);
+  \node[new] (x) at (4.0,0) {merge}; \draw[link] (x)--(ma); \draw[link] (x)--(f2);
+  % squash
+  \node[new] (s) at (6.9,0) {F1+F2}; \draw[link] (s)--(mb);
+  % rebase
+  \node[new] (r1) at (12.7,0) {F1'}; \node[new] (r2) at (13.9,0) {F2'};
+  \draw[link] (r1)--(mc); \draw[link] (r2)--(r1);
+  \node[font=\scriptsize,align=center,text width=4.6cm] at (2.2,-1.9) {keeps F1 and F2 and adds a merge commit};
+  \node[font=\scriptsize,align=center,text width=4.6cm] at (7.8,-1.9) {all of the branch's commits become \emph{one} new commit};
+  \node[font=\scriptsize,align=center,text width=4.6cm] at (13.4,-1.9) {F1 and F2 are replayed one by one on top of main (copies with new IDs, F1' F2')};
+\end{tikzpicture}
+\caption{The three merge buttons. \code{M1}, \code{M2} are on \code{main}; \code{F1}, \code{F2} are the commits of the pull request's branch. Green commits are new.}
+\label{fig:buttons}
+\end{figure}
+
+\begin{description}[leftmargin=1.2em,style=nextline]
+\item[Create a merge commit] The merge you know from Lecture 5. Keeps every commit and the real history. A safe default.
+\item[Squash and merge] Combines all commits of the branch into one. Good when the branch has messy ``fix typo'' commits and you want a tidy \code{main}. The branch's own commits are not kept in \code{main}.
+\item[Rebase and merge] Replays the commits on top of \code{main} without a merge commit, giving a straight line. Lecture 8 explains rebasing; for now just know it exists.
+\end{description}
+
+After merging, press \textbf{Delete branch}: it has done its job (Lecture 5's life cycle). Then bring the result to your computer and tidy up:
+
+\begin{lstlisting}
+$ git switch main
+$ git pull
+$ git branch -d add-note        # works: the branch is merged
+\end{lstlisting}
+
+(If you chose \emph{Squash and merge}, Git cannot see that your branch's commits are included, because the squashed commit is a new one, so \code{-d} may refuse; use \code{git branch -D add-note} then. This is one of the rare safe uses of \code{-D}: you checked on GitHub that the pull request was merged.)
+
+\section{Forks: contributing to a project you do not own}
+
+You cannot push to someone else's repository (nor should you be able to). Open-source projects therefore use \textbf{forks}. A fork is your own copy of the repository, \emph{on GitHub, under your account}. You push to your fork, and then ask the owner to pull from it.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw,rounded corners,minimum width=4.0cm,minimum height=1.8cm,align=center,font=\small},
+  arr/.style={->,thick,>=Stealth}]
+  \node[box,fill=orange!12] (up) at (0,3.6) {\textbf{upstream}\\\scriptsize original repository\\\scriptsize (the owner's GitHub)};
+  \node[box,fill=orange!12] (fk) at (7.6,3.6) {\textbf{your fork}\\\scriptsize a copy under\\\scriptsize your GitHub account};
+  \node[box,fill=blue!8] (lo) at (7.6,0) {\textbf{your computer}\\\scriptsize local clone of your fork};
+  \draw[arr] (up) -- node[above,font=\scriptsize] {1.\ \textbf{Fork} (button)} (fk);
+  \draw[arr] (fk) -- node[right,font=\scriptsize] {2.\ \code{git clone}} (lo);
+  \draw[arr,bend left=12] ([xshift=-0.9cm]lo.north) to node[left,font=\scriptsize,align=right] {3.\ \code{git push}\\(to \code{origin})} ([xshift=-0.9cm]fk.south);
+  \draw[arr,dashed] (fk.west) -- node[below,font=\scriptsize] {4.\ pull request} (up.east);
+  \draw[arr,dashed] (up.south) -- node[left,font=\scriptsize,align=right] {5.\ \code{git fetch upstream}} ($(lo.west)+(0,0.0)$);
+\end{tikzpicture}
+\caption{Three copies. You clone your fork (\code{origin}) and also add the original as a second remote called \code{upstream}, to follow its progress.}
+\label{fig:fork}
+\end{figure}
+
+\begin{enumerate}
+  \item On the original repository's page click \textbf{Fork}, then \textbf{Create fork}.
+  \item Clone \emph{your fork} (not the original) and tell Git about the original:
+\end{enumerate}
+
+\begin{lstlisting}
+$ git clone git@github.com:YOU/project.git
+$ cd project
+$ git remote add upstream git@github.com:OWNER/project.git
+$ git remote -v
+origin    git@github.com:YOU/project.git (fetch)
+origin    git@github.com:YOU/project.git (push)
+upstream  git@github.com:OWNER/project.git (fetch)
+upstream  git@github.com:OWNER/project.git (push)
+\end{lstlisting}
+
+\code{origin} is your fork, where you may push. \code{upstream} is the original, the usual name for it, where you only \emph{read}. Work as before: a branch per change, push it to \code{origin}, and open the pull request. On the pull-request page, the \emph{base repository} is the owner's, and the \emph{head repository} is your fork.
+
+\subsection{Keeping your fork up to date}
+
+The original keeps moving. To catch up, fetch from \code{upstream} and merge into your \code{main}:
+
+\begin{lstlisting}
+$ git fetch upstream
+$ git switch main
+$ git merge upstream/main          # usually a fast-forward
+$ git push origin main             # update your fork on GitHub
+\end{lstlisting}
+
+\begin{keyidea}
+Never commit your own work directly on the fork's \code{main}; make a branch. Then \code{main} stays a clean mirror of \code{upstream/main}, and catching up is always a simple fast-forward.
+\end{keyidea}
+
+\section{Working with other people's branches}
+
+\textbf{Looking at a teammate's branch before you review it.} Fetch, look, and (if you want to run it) check it out:
+
+\begin{lstlisting}
+$ git fetch
+$ git log --oneline main..origin/teammate-feature     # commits it adds
+6bce7d7 Document greeting
+14ff5f7 Add greeting
+$ git diff --stat main...origin/teammate-feature     # files it changes
+ README.md    | 1 +
+ greeting.txt | 1 +
+ 2 files changed, 2 insertions(+)
+$ git switch teammate-feature
+branch 'teammate-feature' set up to track 'origin/teammate-feature'.
+\end{lstlisting}
+
+\code{git switch} on a name that exists only on the remote creates a local branch that tracks it. If you have write access you may push a fix to that same branch; the open pull request then shows it.
+
+\textbf{A pull request from a fork} lives under a special name that you can fetch: \code{git fetch origin pull/12/head:pr-12} creates a local branch \code{pr-12} from pull request number 12.
+
+\textbf{Conflicts.} If someone merged other changes meanwhile, GitHub may say \emph{This branch has conflicts that must be resolved}. Solve it on your computer: merge \code{main} into your branch, resolve the conflict (Lecture 5), commit and push; the pull request updates.
+
+\begin{lstlisting}
+$ git switch add-note
+$ git fetch origin
+$ git merge origin/main        # fix the conflict if there is one, then commit
+$ git push
+\end{lstlisting}
+
+\begin{pitfall}
+Do not start your branch from an old \code{main}. Before a new branch, run \code{git switch main}, \code{git pull}, and only then \code{git switch -c new-branch}. Otherwise you carry old code and invite conflicts.
+\end{pitfall}
+
+\Needspace{12\baselineskip}
+\section{Homework 7}
+
+\begin{homework}{7: Review and merge}
+\textbf{Part A: be the reviewer and the maintainer} (no internet needed). The setup script creates \code{practice/hw7\_server.git}, a bare repository playing the role of GitHub. A teammate has pushed a branch \code{teammate-feature} and wants it merged into \code{main}. From the course folder:
+\begin{lstlisting}
+$ bash codeHints/L07/setup_hw7.sh
+$ cd practice
+\end{lstlisting}
+Do the tasks in order. To start over: \code{setup\_hw7.sh --reset} from the course folder.
+
+\begin{description}[leftmargin=1.2em,style=nextline]
+\item[7.1 Clone] Clone the server into a folder called \code{hw7} and go into it.
+\item[7.2 Review] Run \code{git fetch}, then look at the commits the branch adds and at its changes, using the commands of Section~6. One line contains a typo. In \code{practice/hw7\_answers.txt} (next to the \code{hw7} folder, created with \code{printf} or \code{echo}) write two lines: \code{commits=<number of commits on the branch>} and \code{typo-in=<file name containing the typo>}.
+\item[7.3 Suggest a fix] Check out the branch (\code{git switch teammate-feature}), fix the typo, commit it as \code{Fix typo in greeting}, and push to the same branch with \code{git push}.
+\item[7.4 Merge] Switch to \code{main} and merge the branch \emph{with a merge commit}: \code{git merge --no-ff --no-edit teammate-feature}. Push \code{main}.
+\item[7.5 Clean up] Delete the branch locally (\code{git branch -d}) and on the server (\code{git push origin --delete teammate-feature}).
+\item[7.6 Question] Add the line \code{merge-button=<word>}: which of GitHub's three merge buttons does what you just did in 7.4? Write \code{merge}, \code{squash} or \code{rebase}.
+\end{description}
+
+\textbf{Part B: real pull requests with your friend} (optional, but this is the point of the lecture). You need two GitHub accounts, called A and B here. Use \emph{public} repositories, so the checker can look them up. You do the two rounds one after the other; both of you do your own tasks.
+
+\begin{description}[leftmargin=1.2em,style=nextline]
+\item[7.7 Round 1: shared repository] \textbf{A} creates a public repository \code{pr-practice} with a README (the ``Add a README'' box ticked is fine here), and adds \textbf{B} as a collaborator (Settings $\rightarrow$ Collaborators $\rightarrow$ Add people). \textbf{B} accepts the invitation, clones it into \code{practice/hw7\_pr}, creates the branch \code{add-b-note} with a new file \code{notes-from-b.md}, pushes it, and opens a pull request with a title and a description. \textbf{A} reviews: at least one inline comment, then \emph{Request changes}. \textbf{B} fixes it by committing on the same branch and pushing. \textbf{A} approves and merges with \emph{Create a merge commit}. \textbf{B} deletes the branch on GitHub, then runs \code{git switch main}, \code{git pull}, \code{git branch -d add-b-note}.
+\item[7.8 Round 2: fork] Swap roles. \textbf{B} creates a public repository \code{pr-practice-b} with a README. \textbf{A} forks it and clones \emph{the fork} into \code{practice/hw7\_pr} (a different folder from Part A's \code{hw7}; if it already exists, delete or rename it first). \textbf{A} runs \code{git remote add upstream} (B's repository), creates the branch \code{add-a-note}, pushes it to the fork, and opens a pull request \emph{to B's repository}. \textbf{B} reviews with a suggestion, approves, and merges with \emph{Squash and merge}. \textbf{A} syncs the fork: \code{git fetch upstream}, \code{git switch main}, \code{git merge upstream/main}, \code{git push origin main}.
+\item[7.9 Record and check] In \code{practice/hw7\_pr\_answers.txt} write one line for the pull request \emph{you opened}: \code{my-pr=<owner>/<repository>\#<number>}, for example \code{my-pr=alice/pr-practice\#1} (the number is shown at the top of the pull request page). Be on \code{main} with a clean working directory, and run the checker.
+\end{description}
+
+\textbf{Check yourself:} \code{bash codeHints/L07/check\_hw7.sh} from the course folder. Part A needs no network. Part B is checked only if \code{practice/hw7\_pr} or \code{hw7\_pr\_answers.txt} exists; the checker asks GitHub's public service whether your pull request is merged, and skips that one check if it cannot reach GitHub. Then compare with the solutions at the end of this lecture.
+\end{homework}
+
+\section{Summary}
+
+\begin{itemize}
+  \item A pull request is a reviewable proposal to merge a branch. Branch, commit, push, open, review, merge, delete, pull.
+  \item Reviewers comment, suggest, approve or request changes; authors answer by pushing more commits to the same branch.
+  \item Merge with a merge commit (keeps everything), squash (one commit) or rebase (straight line); then delete the branch.
+  \item Fork what you cannot push to: clone the fork as \code{origin}, add the original as \code{upstream}, branch for each change, merge \code{upstream/main} to stay current.
+\end{itemize}
+
+\textbf{Further reading:} \emph{Pro Git}, Chapter 6.2; GitHub Docs, ``About pull requests''.
+
+\solutionspage
+
+\input{solutions_body}
+
+\end{document}
