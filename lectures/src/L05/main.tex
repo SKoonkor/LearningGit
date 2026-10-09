@@ -94,9 +94,9 @@ Merge made by the 'ort' strategy.
  create mode 100644 shopping.txt
 \end{lstlisting}
 
-(Older Git versions print \code{recursive} instead of \code{ort}. Without \code{--no-edit}, Git opens an editor so that you can confirm the merge message; just save and close it. We skip it with \code{--no-edit}.)
+(The word \code{ort} is just the name of Git's merging method; older versions print \code{recursive}. Ignore it. Without \code{--no-edit}, Git opens a text editor so that you can confirm the merge message: save and close it, which in \code{vim} means pressing \code{Esc}, typing \code{:wq} and Enter. We skip the editor with \code{--no-edit}.)
 
-Git made a \textbf{merge commit}, a special commit with \emph{two parents}: one from each line of work.
+Git made a \textbf{merge commit}, a special commit with \emph{two parents} (two commits directly before it): one from each line of work.
 
 \begin{figure}[H]
 \centering
@@ -108,7 +108,7 @@ Git made a \textbf{merge commit}, a special commit with \emph{two parents}: one 
   \draw[link] (m1)--(p1); \draw[link] (s1)--(p1);
   \node[branchtag] (mt1) at (5.9,0.8) {main}; \draw[link] (mt1)--(m1);
   \node[branchtag] (st1) at (6.0,-0.8) {shopping}; \draw[link] (st1)--(s1);
-  \node[font=\scriptsize,text=black!60,anchor=north] at (0,-0.55) {common ancestor};
+  \node[font=\scriptsize,text=black!60,anchor=north] at (0,-0.55) {common ancestor (base)};
   \node[font=\small\bfseries,anchor=west] at (-1.6,-2.2) {after the merge};
   \node[cbx] (p2) at (0,-4.2) {7ad9635};
   \node[cbx] (m2) at (3.4,-3.4) {df478ec};
@@ -133,7 +133,7 @@ The name \emph{three-way} comes from the three versions Git looks at: the common
 What happened since the base & Result \\
 \midrule
 only one side changed a part of a file & Git takes that side's change \\
-both sides changed \emph{different} parts of a file & Git applies both changes \\
+both sides changed \emph{different, non-adjacent} parts of a file & Git applies both changes \\
 both sides changed the \emph{same part} differently & \textbf{conflict}: Git asks you \\
 \bottomrule
 \end{tabular}
@@ -155,11 +155,18 @@ $ git log --merges --oneline
 52cdd3d Merge branch 'shopping'
 \end{lstlisting}
 
-(The merge commit's own ID depends on the time you run the merge, so yours will differ from \code{52cdd3d}. The other IDs are fixed.) The command \code{git log --merges} lists only merge commits.
+(The ID of any merge commit depends on the time you run the merge, so yours will differ from \code{52cdd3d}. The IDs of the branch commits are fixed.) The command \code{git log --merges} lists only merge commits.
 
-\begin{tryit}
-Merge \code{syrup} as well: \code{git merge --no-edit syrup}. It changes line~1 of \code{recipes.txt}, while nothing on \code{main} has touched that file, so Git applies the change on its own. Check \code{cat recipes.txt} and the graph.
-\end{tryit}
+\textbf{One more merge before the conflict.} Merge \code{syrup} now (the next case needs it). It changes line~1 of \code{recipes.txt}, and nothing on \code{main} has touched that file, so Git applies the change on its own and makes a second merge commit:
+
+\begin{lstlisting}
+$ git merge --no-edit syrup
+Merge made by the 'ort' strategy.
+ recipes.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+$ cat recipes.txt
+Pancakes: flour, milk, eggs, syrup
+\end{lstlisting}
 
 \Needspace{14\baselineskip}
 \section{Case 3: the conflict}
@@ -195,11 +202,20 @@ $ git status --short
 UU recipes.txt
 \end{lstlisting}
 
-\code{both modified} (\code{UU} in the short form) marks the conflicted file. Git has already merged everything it could in other files; only the files listed here need your attention. Note the second hint: \code{git merge --abort} is your escape hatch (Step 5).
+``Unmerged paths'' means ``files that are still conflicted''. \code{both modified} (\code{UU} in the short form) marks the conflicted file. Git has already merged everything it could. If several files conflict you will see several lines here; resolve each file in turn, \code{git add} each one, and make one \code{git commit} at the end. Note the last hint: \code{git merge --abort} is your escape hatch (Step 3).
 
 \subsection{Step 2: read the conflict markers}
 
-Git has written both versions into the file, separated by markers:
+Open the file in any text editor (for example \code{nano recipes.txt}, or your usual editor), or just print it with \code{cat}. Git has written both versions into it, separated by markers:
+
+\begin{lstlisting}
+$ cat recipes.txt
+<<<<<<< HEAD
+Pancakes: flour, milk, eggs, syrup
+=======
+Pancakes: flour, milk, eggs, vanilla
+>>>>>>> vanilla
+\end{lstlisting}
 
 \begin{figure}[H]
 \centering
@@ -221,9 +237,23 @@ Git has written both versions into the file, separated by markers:
 \label{fig:markers}
 \end{figure}
 
-\subsection{Step 3: decide and edit}
+\subsection{Step 3: practise the escape hatch}
 
-Open \code{recipes.txt} in any text editor. You have three choices: keep your side, keep the other side, or (the usual choice) combine them by writing the line you actually want. Delete the marker lines and leave only the final text. We want both ingredients:
+Before changing anything, try the safety net. \code{git merge --abort} cancels the whole merge, and Git puts everything back as it was before you typed \code{git merge} (provided the working directory was clean then, as we required):
+
+\begin{lstlisting}
+$ git merge --abort
+$ git status
+On branch main
+nothing to commit, working tree clean
+$ git merge vanilla                  # the same conflict appears again
+\end{lstlisting}
+
+This is the safest way to practise: start a merge, look at the conflict, abort, and try again. \code{--abort} works only while the merge is unfinished; after the final \code{git commit} the merge is done.
+
+\subsection{Step 4: decide and edit}
+
+Open \code{recipes.txt} in your editor. You have three choices: keep your side, keep the other side, or (the usual choice) combine them by writing the line you actually want. Delete the marker lines and leave only the final text. We want both ingredients:
 
 \begin{lstlisting}
 Pancakes: flour, milk, eggs, syrup, vanilla
@@ -233,7 +263,7 @@ Pancakes: flour, milk, eggs, syrup, vanilla
 The file must contain \emph{no} \code{<<<<<<<}, \code{=======} or \code{>>>>>>>} lines when you are finished. Git will not stop you from committing them, and the file will then be broken. Search for \code{<<<<} before you continue.
 \end{pitfall}
 
-\subsection{Step 4: tell Git it is resolved, and finish}
+\subsection{Step 5: tell Git it is resolved, and finish}
 
 \begin{lstlisting}
 $ git add recipes.txt
@@ -249,7 +279,7 @@ $ git commit --no-edit
 [main 6e9ef86] Merge branch 'vanilla'
 \end{lstlisting}
 
-\code{git add} here means ``this file is resolved''. \code{git commit} completes the merge with the prepared message \code{Merge branch 'vanilla'} (drop \code{--no-edit} to edit it).
+\code{git add} here means ``this file is resolved''. \code{git commit} completes the merge with the prepared message \code{Merge branch 'vanilla'} (drop \code{--no-edit} to edit it; if an editor opens, save and close it). Your ID will differ from \code{6e9ef86}.
 
 \begin{figure}[H]
 \centering
@@ -274,21 +304,12 @@ $ git commit --no-edit
 \label{fig:flow}
 \end{figure}
 
-\subsection{Step 5: or abort}
-
-Unsure, or want to start again? Cancel the whole merge. Git puts everything back exactly as it was before you typed \code{git merge}:
-
-\begin{lstlisting}
-$ git merge --abort
-$ git status
-On branch main
-nothing to commit, working tree clean
-\end{lstlisting}
-
-This is the safest way to practise: start a merge, look at the conflict, abort, and try again. \code{--abort} works only while the merge is unfinished; after the final \code{git commit} the merge is done.
+\begin{quickfact}
+Git conflicts not only when two people change the \emph{same} line, but also when changes touch \emph{directly adjacent} lines. If \code{main} had added a new line directly under the \code{Pancakes} line, then merging \code{syrup} (which edits that line) would have conflicted too. Conflicts are normal in teamwork, and they are easy once you have resolved a few.
+\end{quickfact}
 
 \begin{quickfact}
-Git conflicts not only when two people change the \emph{same} line, but also when changes touch \emph{neighbouring} lines. If \code{main} had added a new line directly under the \code{Pancakes} line, then merging \code{syrup} (which edits that line) would have conflicted too. Conflicts are normal in teamwork, and they are easy once you have resolved a few.
+\textbf{The other direction.} You can also merge \code{main} \emph{into} a feature branch, to bring it up to date: \code{git switch feature}, then \code{git merge main}. The feature branch is the receiver and \code{main} is unchanged. If you merge in the wrong direction by mistake, do not panic: a finished merge can be undone with \code{git revert -m 1 <merge-commit>} (Lecture 10 shows more ways).
 \end{quickfact}
 
 \section{Cleaning up}
@@ -314,7 +335,7 @@ Run \code{git log --oneline --graph} now: the graph tells the whole story, with 
 \end{pitfall}
 
 \begin{quickfact}
-Merging a branch that is already included gives \code{Already up to date.} and changes nothing. If you regret a \emph{finished} merge, a merge commit can be undone with \code{git revert -m 1 <merge-commit>} (\code{-m 1} says which parent to keep). Lecture 10 shows more ways to go back.
+Merging a branch that is already included gives \code{Already up to date.} and changes nothing. (For regretting a finished merge, see the note on \code{git revert -m 1} above.)
 \end{quickfact}
 
 \Needspace{10\baselineskip}
@@ -326,7 +347,7 @@ From the course folder run:
 $ bash codeHints/L05/setup_hw5.sh
 $ cd practice/hw5
 \end{lstlisting}
-You get \code{main} (two commits) and four branches: \code{drinks}, \code{desserts}, \code{spicy} and \code{vegan}. Look first with \code{git log --oneline --graph --all --decorate}. Do the tasks \emph{in this order}. To start over, run \code{setup\_hw5.sh --reset} from the course folder.
+You get \code{main} (two commits) and four branches: \code{drinks}, \code{desserts}, \code{spicy} and \code{vegan}. Look first with \code{git log --oneline --graph --all --decorate}. Do the tasks \emph{in this order}: the branch you merge first stands above the \code{=======} divider in a later conflict, and the questions in 5.6 depend on that. To start over, run \code{setup\_hw5.sh --reset} from the course folder.
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[5.1 First merge] Merge \code{drinks} into \code{main}. (Which kind of merge will it be? Check that Git printed \code{Fast-forward}.)
@@ -334,7 +355,7 @@ You get \code{main} (two commits) and four branches: \code{drinks}, \code{desser
 \item[5.3 Third merge] Merge \code{spicy}. Use \code{--no-edit}.
 \item[5.4 The conflict] Merge \code{vegan}. Git reports a conflict in \code{menu.txt}. First look: run \code{git status}, open the file, then cancel with \code{git merge --abort} and check that \code{git status} is clean. Now merge \code{vegan} again and resolve it for real: line 1 of \code{menu.txt} must mention \emph{both} \code{spicy} and \code{vegan} (for example \code{Pizza (spicy, vegan)}), line 2 stays \code{Pasta}, and no marker lines may remain. Add the file and finish with \code{git commit --no-edit}.
 \item[5.5 Clean up] Delete the four merged branches with \code{git branch -d}. Only \code{main} should remain.
-\item[5.6 Questions] In \code{practice/hw5\_answers.txt} (outside the repository) write two lines:
+\item[5.6 Questions] In the file \code{practice/hw5\_answers.txt} (next to the \code{hw5} folder, outside the repository; create it with \code{printf} or \code{echo} in Git Bash, not with a PowerShell redirect) write two lines:
 \begin{lstlisting}
 above=<spicy or vegan>
 merge-commits=<number>

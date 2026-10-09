@@ -27,6 +27,7 @@ menu_ok()    {
   case "$l1" in *vegan*) ;; *) return 1;; esac
   [ "$l2" = "Pasta" ]
 }
+order_ok()   { own_repo && g merge-base --is-ancestor "$(id 5)" "main^1" 2>/dev/null; }   # spicy merged before the vegan conflict merge
 a_above()    { [ "$(ans above | tr 'A-Z' 'a-z')" = "spicy" ]; }
 a_merges()   { [ "$(ans merge-commits)" = "3" ]; }
 
@@ -38,6 +39,7 @@ check "5.2-5.4 every merge commit has two parents"                two_parents
 check "5.4 the newest commit on main is a merge commit"           tip_merge
 check "5.1-5.4 all six original commits are in main's history"    all_in
 check "5.1-5.4 main contains README, menu, drinks and desserts files" files_ok
+check "5.3/5.4 spicy was merged BEFORE vegan (as the task order says)" order_ok
 check "5.4 menu.txt: first line mentions spicy AND vegan, second is Pasta" menu_ok
 check "5.4 no conflict markers left in the committed files"       no_markers
 check "5.4 working directory clean (merge finished)"              clean

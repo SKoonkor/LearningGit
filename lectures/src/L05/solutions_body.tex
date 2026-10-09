@@ -50,8 +50,9 @@ $ printf 'above=spicy\nmerge-commits=3\n' > ../hw5_answers.txt
 \Needspace{8\baselineskip}
 \textbf{Common mistakes.}
 \begin{itemize}
-  \item Merging \code{vegan} before \code{spicy}. Then \code{vegan}'s version stands above the divider, but the checker expects \code{above=spicy}, so follow the order of the tasks.
+  \item Merging \code{vegan} before \code{spicy}. Then \code{vegan}'s version stands above the divider. The checker notices the wrong order (check ``spicy was merged BEFORE vegan'') and expects \code{above=spicy}, so follow the order of the tasks.
   \item Committing with the marker lines still in the file. Open the file and check.
-  \item Running \code{git commit} without \code{git add menu.txt} first: Git refuses and says the path is unmerged.
+  \item Merging while on the wrong branch (for example on \code{drinks}). Check with \code{git branch --show-current} before every merge.
+  \item Running \code{git commit} without \code{git add menu.txt} first: Git refuses (``Committing is not possible because you have unmerged files'').
   \item Running \code{git merge --abort} \emph{after} the final commit: it no longer applies. Use \code{setup\_hw5.sh --reset} and start again.
 \end{itemize}
