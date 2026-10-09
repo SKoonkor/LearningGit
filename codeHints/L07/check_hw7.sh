@@ -63,28 +63,39 @@ else
   b_clean()  { [ -d "$PB/.git" ] && [ -z "$(p status --porcelain | grep -v -e '\.DS_Store' -e 'Thumbs\.db')" ]; }
   b_main()   { [ "$(p symbolic-ref --short HEAD 2>/dev/null)" = "main" ]; }
   b_fmt()    { echo "$(ans "$BANS" my-pr)" | grep -Eq '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[0-9]+$'; }
+  repo_of()  { sed -E 's#^.*github\.com[:/]##; s#\.git$##; s#/$##'; }
   b_fork()   { p remote get-url upstream >/dev/null 2>&1; }
-  check "7.7 practice/hw7_pr is a clone whose origin is on github.com"    b_dir
-  check "7.9 you are back on main with a clean working directory"          b_main
+  check "7.7/7.8 practice/hw7_pr is a clone whose origin is on github.com"    b_dir
+  check "7.9 you are back on main"                                       b_main
   check "7.9 working directory clean"                                      b_clean
-  check "7.8 hw7_pr_answers.txt: my-pr=<owner>/<repo>#<number>"            b_fmt
+  check "7.9 hw7_pr_answers.txt: my-pr=<owner>/<repo>#<number>"            b_fmt
   if b_fmt; then
     mypr="$(ans "$BANS" my-pr)"; repo="${mypr%#*}"; num="${mypr##*#}"
-    body="$(curl -s -m 15 -w '\n%{http_code}' "https://api.github.com/repos/$repo/pulls/$num" 2>/dev/null)"
+    # the pull request must belong to the repository you cloned (collaborator route),
+    # or to your 'upstream' (fork route; then 'upstream' is required)
+    origin_repo="$(p remote get-url origin 2>/dev/null | repo_of)"
+    upstream_repo="$(p remote get-url upstream 2>/dev/null | repo_of)"
+    lc() { echo "$1" | tr 'A-Z' 'a-z'; }
+    route_ok() {
+      [ "$(lc "$repo")" = "$(lc "$origin_repo")" ] && return 0
+      [ -n "$upstream_repo" ] && [ "$(lc "$repo")" = "$(lc "$upstream_repo")" ]
+    }
+    check "7.9 your pull request is in the repository you cloned (collaborator route) or in your 'upstream' (fork route)" route_ok
+    body="$(curl -sL -m 15 -w '\n%{http_code}' "https://api.github.com/repos/$repo/pulls/$num" 2>/dev/null)"
     code="$(echo "$body" | tail -1)"
     if [ "$code" = "200" ]; then
       pr_merged() { echo "$body" | grep -Eq '^  "merged": *true'; }
-      check "7.8 your pull request $mypr is merged"                        pr_merged
+      check "7.9 your pull request $mypr is merged"                        pr_merged
     elif [ "$code" = "404" ]; then
       not_found() { false; }
-      check "7.8 GitHub cannot find $mypr (check the spelling and number; the repository must be PUBLIC)" not_found
+      check "7.9 GitHub cannot find $mypr (check the spelling and number; the repository must be PUBLIC)" not_found
     else
-      skip "7.8 could not reach GitHub's public API (no network, or rate limit): merged-check skipped"
+      skip "7.9 could not reach GitHub's public API (no network, rate limit, or a moved repository): the merged-check was NOT verified"
     fi
   fi
   if b_fork; then
     up_ok() { [ "$(p remote get-url upstream | grep -Ec 'github\.com[:/]')" = "1" ]; }
-    check "7.9 (fork route) the remote 'upstream' points at the original repository" up_ok
+    check "7.8 (fork route) the remote 'upstream' points at the original repository on github.com" up_ok
   fi
 fi
 summary
