@@ -40,9 +40,9 @@ Usage: run the greeter.
 
 \begin{lstlisting}
 $ git add README.md
-$ git rebase --continue          # editor 1: the message of "Add greeting": just save and close
-                                 # later, editor 2 (reword): change "add farewell" to
-                                 # "Add farewell", save, close
+$ git rebase --continue
+        # editor 1: message of "Add greeting": save and close
+        # editor 2 (reword): change "add farewell" to "Add farewell"
 $ git log --oneline --reverse main..feature
 $ git push                       # rejected (non-fast-forward): expected
 $ git push --force-with-lease

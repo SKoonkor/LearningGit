@@ -133,6 +133,7 @@ Because rebase replays commits one by one, a conflict can appear in the middle. 
 \Needspace{20\baselineskip}
 \begin{lstlisting}
 $ git switch syrup
+branch 'syrup' set up to track 'origin/syrup'.
 $ git rebase main
 Auto-merging recipes.txt
 CONFLICT (content): Merge conflict in recipes.txt
@@ -207,6 +208,7 @@ Command & Effect \\
 The most useful form of rebase lets you \emph{edit the list of commits}. Our \code{cookies} branch has the story ``Add cookie recipe, wip, fix typo''. We want a single commit. Start an interactive rebase onto \code{main}:
 
 \begin{lstlisting}
+$ git switch cookies
 $ git rebase -i main
 \end{lstlisting}
 
@@ -228,6 +230,8 @@ pick 5bfcea2 fix typo in cookies
 # d, drop <commit> = remove commit
 # (...more commands and a warning about deleted lines...)
 \end{lstlisting}
+
+(Your Git may word these comment lines slightly differently.)
 
 Change the word at the start of a line to tell Git what to do with that commit: in the editor, delete \code{pick} and type the new word (\code{fixup}, or just its letter \code{f}; \code{r} for \code{reword}, \code{s}, \code{d}). To fold the second and third commit into the first, replace \code{pick} by \code{fixup} on those lines, then save and close the editor (\code{Esc}, \code{:wq}, Enter; see the box on editors in Section~\ref{sec:conflicts}):
 
@@ -321,8 +325,8 @@ To github.com:you/recipes.git
 \Needspace{9\baselineskip}
 \begin{lstlisting}
 $ git switch sale
-$ git commit --amend -m "Add sale banner (reworded)"       # a rewrite
-$ bash codeHints/L08/friend8.sh sale                        # (course folder) a friend pushes to sale
+$ git commit --amend -m "Add sale banner (reworded)"
+$ bash codeHints/L08/friend8.sh sale          # a friend pushes (course folder)
 $ git push --force-with-lease
 To github.com:you/recipes.git
  ! [rejected]        sale -> sale (stale info)
@@ -337,7 +341,7 @@ Even \code{--force-with-lease} must not be used on \code{main} or any shared bra
 
 \section{Cherry-pick: copying one commit}
 
-Sometimes you want \emph{one} commit from another branch, not the whole branch. The branch \code{sale} has a commit \code{Add sale banner}, and \code{main} should get it now:
+Sometimes you want \emph{one} commit from another branch, not the whole branch. The server's branch \code{sale} has a commit \code{Add sale banner}, and \code{main} should get it now. (If you tried the amend demo above, your local \code{sale} holds a \emph{reworded copy}; the original commit \code{889b766} is still on \code{origin/sale}, so use that ID exactly as shown.)
 
 \Needspace{11\baselineskip}
 \begin{lstlisting}
@@ -360,7 +364,7 @@ $ git cherry-pick 889b766
   \draw[->,thick,>=Stealth,dashed,orange!70!black] (s.east) -- (c.south);
   \node[font=\scriptsize,align=left,orange!60!black,anchor=west] at (5.5,-0.2) {copied by\\\code{git cherry-pick}};
   \node[branchtag] at (6.9,0.9) {main}; \draw[link] (6.2,0.9)--(5.95,0.9);
-  \node[branchtag] at (4.5,-0.9) {sale}; \draw[link] (3.9,-0.9)--(3.6,-0.9);
+  \node[remotetag] at (4.8,-0.9) {origin/sale}; \draw[link] (4.0,-0.9)--(3.6,-0.9);
 \end{tikzpicture}
 \caption{Cherry-pick creates a \emph{copy} of \code{889b766} on top of \code{main}. The original stays on \code{sale}.}
 \label{fig:cherry}
