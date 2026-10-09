@@ -14,11 +14,13 @@ if [ -e "$hw" ]; then
   fi
 fi
 
+rm -f "$root/practice/hw3_answers.txt"   # never keep stale answers from an earlier attempt
 mkdir -p "$hw" && cd "$hw" || exit 1
 git init -q -b main || { echo "git init failed (need Git 2.28 or newer)"; exit 1; }
 git config --local user.name "Practice User"
 git config --local user.email "practice@example.com"
 git config --local core.autocrlf false
+git config --local commit.gpgsign false
 
 commit() {  # commit "message" "date"
   GIT_AUTHOR_DATE="$2" GIT_COMMITTER_DATE="$2" git commit -q -m "$1"

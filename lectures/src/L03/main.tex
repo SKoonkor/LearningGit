@@ -13,7 +13,7 @@
 
 \section{Why this lecture matters}
 
-Version control earns its keep when something goes wrong. Everyone saves the wrong file, mistypes a message, or deletes a line they needed. Git gives you a tool for each situation, but the tools differ in one crucial way: some are completely safe, and one throws work away for good. Learning which is which turns Git from scary into reassuring.
+Version control earns its keep when something goes wrong. Everyone saves the wrong file, mistypes a message, or deletes a line they needed. Git gives you a tool for each situation, but the tools differ in one crucial way: some are completely safe, and one throws work away for good. Learning which is which turns Git from scary into reassuring. In this lecture, the \emph{only} command that can lose something you did not commit is \code{git restore file}, and we will put a warning sign on it.
 
 We will use a small practice repository whose history is the same on every computer. From the course folder run:
 
@@ -22,7 +22,7 @@ $ bash codeHints/L03/setup_demo3.sh
 $ cd practice/demo3
 \end{lstlisting}
 
-It creates \code{demo3} with four commits (a README and three recipes). Commit IDs are computed from the content, author and date, and the script fixes all of these, so the IDs printed in this lecture are the ones you will see. (On Windows with automatic line-ending conversion they may differ; everything else still works. If you ever want a fresh copy, add \code{--reset}.)
+It creates \code{demo3} with four commits (a README and three recipes). Commit IDs are computed from the content, author and date, and the script fixes all of these, so the IDs printed in this lecture should be the ones you see. (On Windows with automatic line-ending conversion they may differ; everything else still works.) To get a fresh copy at any time, first leave the folder (\code{cd ../..}), then run \code{bash codeHints/L03/setup\_demo3.sh --reset}, then \code{cd practice/demo3} again.
 
 \section{Reading the history}
 
@@ -67,13 +67,13 @@ Command & What it shows \\
 \code{git log --oneline} & One line per commit: short ID and message. \\
 \code{git log -n 2} & Only the 2 newest commits (also works as \code{-2}). \\
 \code{git log --stat} & Also which files each commit changed, with counts of added and removed lines. \\
-\code{git log --grep=crepe} & Only commits whose message contains the word. \\
-\code{git log --oneline --graph} & Draws the shape of the history. With one straight line it is not exciting; it becomes useful with branches in Lecture 4. \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \subsection{\texttt{git show}: one commit in detail}
+
+\code{HEAD} means ``the commit I am on now'', here the newest one (Section~\ref{sec:head} explains it).
 
 \begin{lstlisting}
 $ git show HEAD
@@ -95,7 +95,7 @@ index 2d1a741..0104975 100644
 
 \code{git show} prints the message and then the \emph{change} the commit made (a ``diff'', explained below). You can give it any commit ID: \code{git show c595297}. The short 7-character ID is enough as long as it is unambiguous.
 
-\subsection{Naming commits: \texttt{HEAD}, \texttt{HEAD\textasciitilde{}1}}
+\subsection{Naming commits: \texttt{HEAD}, \texttt{HEAD\textasciitilde{}1}}\label{sec:head}
 
 You rarely want to copy IDs. Git has names for commits relative to where you are:
 
@@ -114,7 +114,7 @@ You rarely want to copy IDs. Git has names for commits relative to where you are
   \node[nm,below=4mm of b] {HEAD\textasciitilde{}2};
   \node[nm,below=4mm of a] {HEAD\textasciitilde{}3};
 \end{tikzpicture}
-\caption{\code{HEAD} is the commit you are currently on (the newest one, for now). \code{HEAD\textasciitilde{}1} is its parent, \code{HEAD\textasciitilde{}2} its grandparent, and so on. Arrows point from a commit to its parent.}
+\caption{\code{HEAD} is the commit you are currently on (the newest one, for now). \code{HEAD\textasciitilde{}1} is its parent (the commit just before it), \code{HEAD\textasciitilde{}2} the one before that, and so on. Arrows point from a commit to its parent.}
 \label{fig:head}
 \end{figure}
 
@@ -187,7 +187,6 @@ Command & Compares \\
 \code{git diff --staged} & Staging area against the last commit: what the next commit \emph{would contain}. \\
 \code{git diff HEAD} & Working directory against the last commit: \emph{everything} changed since then. \\
 \code{git diff A B} & Two commits, e.g. \code{git diff HEAD\textasciitilde{}2 HEAD}. \\
-\code{git diff --stat} & (add to any of the above) Only a summary of files and line counts. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -196,8 +195,12 @@ Command & Compares \\
 Run \code{git diff --staged} before every commit to check exactly what you are about to save. It is the best habit in this whole course.
 \end{keyidea}
 
+\begin{tryit}
+With the Muffins line still staged, run \code{git diff HEAD}. It shows the Muffins line even though \code{git diff} showed nothing, because it compares the working directory with the last commit.
+\end{tryit}
+
 \begin{pitfall}
-An empty \code{git diff} does not mean ``nothing changed''. It means nothing changed \emph{that is not already staged}. If you just ran \code{git add}, look with \code{git diff --staged}.
+An empty \code{git diff} does not mean ``nothing changed''. It means nothing changed \emph{that is not already staged}. If you just ran \code{git add}, look with \code{git diff --staged}. Also, \code{git diff} does not show brand-new \emph{untracked} files; \code{git status} does.
 \end{pitfall}
 
 \section{Undoing mistakes}
@@ -212,7 +215,7 @@ The mistake is\ldots & Use & Safe? \\
 \midrule
 staged by accident & \code{git restore --staged file} & safe \\
 edited, and you want the old text back & \code{git restore file} & \textbf{destroys your edit} \\
-in the last commit (message or a forgotten file) & \code{git commit --amend} & rewrites that commit \\
+in the last commit (message or a forgotten file) & \code{git commit --amend} & replaces that commit (old one abandoned) \\
 in an older commit & \code{git revert commit} & safe \\
 \bottomrule
 \end{tabular}
@@ -237,7 +240,7 @@ This is the command Git suggested in its status hints in Lecture 2. Nothing is l
 \subsection{Discard: \texttt{git restore}}
 
 \begin{pitfall}
-\textbf{\code{git restore file} overwrites the file in your working directory with the last saved version. Your uncommitted edits are gone, and there is no undo}, because Git never saved them. Look first with \code{git diff file}, and only restore if you are sure.
+\textbf{\code{git restore file} overwrites the file in your working directory with the staged version (or the last commit, if nothing is staged). Your uncommitted edits are gone, and there is no undo}, because Git never saved them. Look first with \code{git diff file}, and only restore if you are sure.
 \end{pitfall}
 
 \begin{lstlisting}
@@ -249,19 +252,47 @@ Crepes: flour, milk, eggs, butter
 Waffles: flour, milk, eggs, sugar
 \end{lstlisting}
 
-The status is empty (clean) and the Muffins line is gone for good. The same command can fetch an \emph{old} version of a file from any commit:
+The status is empty (clean) and the Muffins line is gone for good. (To \emph{look} at an old version of a file without touching your files, use \code{git show HEAD\textasciitilde{}2:recipes.txt}, which prints the pancake-only version.)
+
+\subsection{Undo an old commit safely: \texttt{git revert}}
+
+\code{git revert} undoes a commit by making a \emph{new} commit that does the opposite. Nothing is erased, so it is always safe, even for shared work. (The listing below assumes a clean \code{demo3} with no uncommitted changes. The new commit's ID depends on when you run it, so yours will differ from \code{02e79f4}.)
 
 \begin{lstlisting}
-$ git show HEAD~2:recipes.txt       # just look at the old version
-Pancakes: flour, milk, eggs
-$ git restore --source=HEAD~2 recipes.txt   # put it into the working directory
+$ git revert --no-edit HEAD
+[main 02e79f4] Revert "Add waffle recipe"
+ 1 file changed, 1 deletion(-)
+$ git log --oneline
+02e79f4 Revert "Add waffle recipe"
+659ed06 Add waffle recipe
+c595297 Add crepe recipe
+906ca29 Add pancake recipe
+9d99f7a Add README
 \end{lstlisting}
 
-The second form also overwrites your current file, so it is a destructive step too (afterwards the file shows up as modified and you can commit it, or discard it again with plain \code{git restore}).
+The waffle line is gone from \code{recipes.txt}, but the waffle commit is still in the history, followed by the commit that undoes it.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  cb/.style={draw,rounded corners,minimum width=2.5cm,minimum height=11mm,align=center,font=\scriptsize\ttfamily,inner sep=3pt}]
+  \node[cb,fill=blue!6] (a) at (0,0) {906ca29\\Add pancake};
+  \node[cb,fill=blue!6] (b) at (3.4,0) {c595297\\Add crepe};
+  \node[cb,fill=red!10] (c) at (6.8,0) {659ed06\\Add waffle};
+  \node[cb,fill=green!15] (d) at (10.2,0) {02e79f4\\Revert waffle};
+  \draw[link] (b)--(a); \draw[link] (c)--(b); \draw[link] (d)--(c);
+  \node[font=\scriptsize,anchor=north,align=center] at (10.2,-0.9) {new commit that\\cancels the red one};
+  \node[font=\scriptsize,anchor=north,align=center] at (6.8,-0.9) {the commit to undo\\stays in history};
+\end{tikzpicture}
+\caption{Revert adds to the history; it never removes anything. The project's \emph{contents} after the revert equal those after \code{c595297}.}
+\label{fig:revert}
+\end{figure}
+
+By default \code{git revert} opens an editor for the message (the same vim trap as in Lecture 2); \code{--no-edit} accepts the standard message \code{Revert "..."}. You can revert any commit by ID. One caution: if later commits changed the same lines, Git cannot undo the old commit automatically and reports a \emph{conflict}. For example, on the original four commits of \code{demo3}, reverting \code{c595297} (the crepes) conflicts, because the waffle commit changed the neighbouring line. Run \code{git revert --abort} to cancel safely. Resolving conflicts is the subject of Lecture 5.
 
 \subsection{Fix the last commit: \texttt{git commit --amend}}
 
-You just committed and notice a typo in the message, or you forgot a file. \code{--amend} replaces the last commit with a corrected one:
+You just committed and notice a typo in the message, or you forgot a file. \code{--amend} replaces the last commit with a corrected one. (The examples here and the revert examples above are \emph{alternatives}: reset \code{demo3}, as described at the start, before trying the other one.)
 
 \begin{lstlisting}
 $ git commit --amend -m "Add waffles recipe (with sugar)"
@@ -270,7 +301,7 @@ $ git commit --amend -m "Add waffles recipe (with sugar)"
  1 file changed, 1 insertion(+)
 \end{lstlisting}
 
-(An amended commit gets an ID that depends on the moment you run the command, so yours will differ from \code{f1c345f}.)
+(An amended commit gets an ID and date that depend on the moment you run the command, so yours will differ from \code{f1c345f} and the date shown.)
 
 To add a forgotten file to the last commit, stage it and amend while keeping the message:
 
@@ -299,51 +330,22 @@ $ git commit --amend --no-edit
 Amend only commits that nobody else has. Once you share a commit (Lecture 6 explains sharing), replacing it causes trouble for your collaborators. Rule: \textbf{amend only the most recent commit, and only if you have not shared it.} Otherwise use \code{revert}.
 \end{pitfall}
 
-\subsection{Undo an old commit safely: \texttt{git revert}}
-
-\code{git revert} undoes a commit by making a \emph{new} commit that does the opposite. Nothing is erased, so it is always safe, even for shared work. (The listing below assumes a fresh \code{demo3}: run \code{setup\_demo3.sh --reset} first if you tried the amend examples. The new commit's ID depends on the time, so yours will differ from \code{02e79f4}.)
-
-\begin{lstlisting}
-$ git revert --no-edit HEAD
-[main 02e79f4] Revert "Add waffle recipe"
- Date: Tue Mar 5 09:00:00 2024 +0000
- 1 file changed, 1 deletion(-)
-$ git log --oneline
-02e79f4 Revert "Add waffle recipe"
-659ed06 Add waffle recipe
-c595297 Add crepe recipe
-906ca29 Add pancake recipe
-9d99f7a Add README
-\end{lstlisting}
-
-The waffle line is gone from \code{recipes.txt}, but the waffle commit is still in the history, followed by the commit that undoes it.
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-  cb/.style={draw,rounded corners,minimum width=2.5cm,minimum height=11mm,align=center,font=\scriptsize\ttfamily,inner sep=3pt}]
-  \node[cb,fill=blue!6] (a) at (0,0) {906ca29\\Add pancake};
-  \node[cb,fill=blue!6] (b) at (3.4,0) {c595297\\Add crepe};
-  \node[cb,fill=red!10] (c) at (6.8,0) {659ed06\\Add waffle};
-  \node[cb,fill=green!15] (d) at (10.2,0) {02e79f4\\Revert waffle};
-  \draw[link] (b)--(a); \draw[link] (c)--(b); \draw[link] (d)--(c);
-  \node[font=\scriptsize,anchor=north,align=center] at (10.2,-0.9) {new commit that\\cancels the red one};
-  \node[font=\scriptsize,anchor=north,align=center] at (6.8,-0.9) {the commit to undo\\stays in history};
-\end{tikzpicture}
-\caption{Revert adds to the history; it never removes anything. The project's \emph{contents} after the revert equal those after \code{c595297}.}
-\label{fig:revert}
-\end{figure}
-
-By default \code{git revert} opens an editor for the message (the same vim trap as in Lecture 2); \code{--no-edit} accepts the standard message \code{Revert "..."}. You can revert any commit by ID. One caution: if later commits changed the same lines, Git cannot undo the old commit automatically and reports a \emph{conflict}. Here, reverting \code{c595297} would do that, because the waffle line sits right next to it. Run \code{git revert --abort} to cancel safely. Resolving conflicts is the subject of Lecture 5.
-
 \subsection{Deleting and untracking files}
 
+Two more commands complete the toolbox. Try them on a throw-away file:
+
 \begin{lstlisting}
-$ git rm syrup.txt                # delete the file and stage the deletion
-$ git rm --cached notes.txt       # stop tracking it, but keep the file on disk
+$ echo "x" > scratch.txt
+$ git add scratch.txt
+$ git commit -m "Add scratch"
+$ git rm --cached scratch.txt     # stop tracking it, keep the file on disk
+rm 'scratch.txt'
+$ git status --short
+D  scratch.txt
+?? scratch.txt
 \end{lstlisting}
 
-\code{git rm file} removes the file from your folder and stages the removal; commit as usual. (Deleting by hand with your file manager works too: then \code{git add file} stages the deletion.) \code{git rm --cached} is the fix promised in Lecture 2 for a file that you committed by mistake and now want in \code{.gitignore}: Git forgets it but leaves it on disk. It remains in the old commits, so it is no cure for a leaked secret.
+The first line of status (\code{D\ \ }, deletion staged) says the \emph{next commit} will no longer contain the file; the second says the file is still in your folder, now untracked. Plain \code{git rm scratch.txt} (without \code{--cached}) removes the file from your folder \emph{and} stages the removal; commit as usual. (Deleting by hand with your file manager works too; then \code{git add file} stages the deletion.) \code{git rm --cached file} is the fix promised in Lecture 2 for a file you committed by mistake and now want in \code{.gitignore}: Git forgets it but leaves it on disk. It stays in the old commits, so it is no cure for a leaked secret. (\code{git rm} refuses to delete a file that has uncommitted changes, unless you add \code{-f}.)
 
 \section{Which tool when?}
 
@@ -351,21 +353,7 @@ $ git rm --cached notes.txt       # stop tracking it, but keep the file on disk
 Ask two questions. \emph{Is the mistake committed yet?} If not, use \code{restore} (and read the warning). \emph{If it is committed, is the commit shared?} If not, \code{--amend} is fine for the last one. If it may be shared, use \code{revert}.
 \end{keyidea}
 
-\begin{center}
-\small
-\begin{tabular}{@{}l l l@{}}
-\toprule
-Command & Changes\ldots & Can lose work? \\
-\midrule
-\code{git restore --staged f} & staging area & no \\
-\code{git restore f} & working directory & \textbf{yes, permanently} \\
-\code{git commit --amend} & replaces the last commit & old commit is abandoned \\
-\code{git revert c} & adds a new commit & no \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-(Lecture 10 shows how even ``abandoned'' commits can usually be rescued, and introduces \code{git reset}, a powerful tool we deliberately skip for now.)
+Even an ``abandoned'' amended commit can usually be rescued, as Lecture 10 shows; that lecture also introduces \code{git reset}, a powerful tool we deliberately skip for now.
 
 \Needspace{12\baselineskip}
 \section{Homework 3}
@@ -379,16 +367,16 @@ $ cd practice/hw3
 You get a repository with four commits and a messy working directory. Run \code{git log --oneline}, \code{git status} and \code{git diff}/\code{git diff --staged} to see the situation: \code{list.txt} has a junk line that is not staged, and \code{notes.txt} has a change that is staged too early. Do the tasks in this order. If you get stuck or break something, rebuild with \code{bash codeHints/L03/setup\_hw3.sh --reset} (from the course folder).
 
 \begin{description}[leftmargin=1.2em,style=nextline]
-\item[3.1 Investigate] Using only \code{git log} (and \code{git show} if you like), find the ID of the commit whose message is \code{Buy fireworks} and the number of commits. In the file \code{practice/hw3\_answers.txt} (outside the repository) write two lines of the form
+\item[3.1 Investigate] Using only \code{git log} (and \code{git show} if you like), find the ID of the commit whose message is \code{Buy fireworks} and the number of commits. In the file \code{practice/hw3\_answers.txt} (outside the repository) write two lines of the form (create the file with \code{echo} or \code{printf}, in a terminal)
 \begin{lstlisting}
 fireworks=<7-character ID>
 commits=<number>
 \end{lstlisting}
 \item[3.2 Discard the junk] Throw away the unwanted line in \code{list.txt} so the file matches the last commit again.
-\item[3.3 Unstage] Take the change in \code{notes.txt} out of the staging area, but \emph{keep the edit} in the file. Afterwards \code{git status --short} should show \code{\ M notes.txt}.
+\item[3.3 Unstage] Take the change in \code{notes.txt} out of the staging area, but \emph{keep the edit} in the file. Afterwards \code{git status --short} should show a space, then \code{M}, then \code{notes.txt} (the first column is blank).
 \item[3.4 Fix the typo] The latest commit message says \code{Update notse}. Change it to \code{Update notes}. The \code{TODO: add syrup} line must \emph{not} end up in that commit.
 \item[3.5 Revert] The fireworks were a bad idea. Undo the commit \code{Buy fireworks} with \code{git revert --no-edit}, using its ID from 3.1. History must keep growing, not shrink.
-\item[3.6 Question] Add a third line to \code{practice/hw3\_answers.txt}: \code{no-undo=<command>}, naming the one Git subcommand from this lecture that can destroy uncommitted work with no way back.
+\item[3.6 Question] Add a third line to \code{practice/hw3\_answers.txt}: \code{no-undo=<command>}, naming the one Git subcommand from this lecture that can destroy uncommitted work with no way back (just the word, for example \code{no-undo=log}).
 \end{description}
 
 The final state: five commits, a clean \code{list.txt}, and only \code{notes.txt} modified (not staged), still containing the TODO line.

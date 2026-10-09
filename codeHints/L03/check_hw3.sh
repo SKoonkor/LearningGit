@@ -10,7 +10,7 @@ g() { git -C "$HW" "$@"; }
 
 nth()      { g rev-list --reverse HEAD | sed -n "$1p"; }
 msg_n()    { [ "$(g log --reverse --format=%s | sed -n "$1p")" = "$2" ]; }
-ans()      { tr -d '\r' < "$ANS" | grep -E "^$1=" | head -1 | sed -E "s/^$1=//; s/[[:space:]]+\$//"; }
+ans()      { tr -d '\r' < "$ANS" | sed $'1s/^\xef\xbb\xbf//' | grep -E "^$1=" | head -1 | sed -E "s/^$1=//; s/[[:space:]]+\$//"; }
 
 own_repo()   { [ -d "$HW/.git" ] && [ -z "$(g rev-parse --show-prefix)" ]; }
 five()       { [ "$(g rev-list --count HEAD)" = "5" ]; }
@@ -20,7 +20,7 @@ old_kept()   {  # first three commits must be untouched (no history rewriting be
 amend_clean(){  # amended commit 4 must NOT contain the staged TODO line
   [ "$(g show "$(nth 4):notes.txt")" = "$(printf 'Pancakes need flour\nWhisk well')" ]
 }
-is_revert()  { [ "$(g rev-parse "$(nth 5)^")" = "$(nth 4)" ]; }
+is_revert()  { [ "$(g rev-parse "$(nth 5)^")" = "$(nth 4)" ] && [ "$(g diff --name-only "$(nth 4)" "$(nth 5)")" = "list.txt" ]; }
 list_back()  { [ "$(g show HEAD:list.txt)" = "$(printf 'milk\neggs')" ]; }
 junk_gone()  { [ "$(cat "$HW/list.txt")" = "$(printf 'milk\neggs')" ]; }
 work_kept()  { [ "$(cat "$HW/notes.txt")" = "$(printf 'Pancakes need flour\nWhisk well\nTODO: add syrup')" ]; }
@@ -30,7 +30,7 @@ a_fire()     {
   [ "$(g rev-parse --verify -q "$id^{commit}")" = "$(sed -n 3p "$IDS")" ]
 }
 a_count()    { [ "$(ans commits)" = "4" ]; }
-a_undo()     { [ "$(ans no-undo | tr 'A-Z' 'a-z')" = "restore" ]; }
+a_undo()     { [ "$(ans no-undo | tr 'A-Z' 'a-z' | sed -E 's/^git[[:space:]]+//')" = "restore" ]; }
 
 echo "Homework 3 checks (folder: $HW)"
 check "setup: practice/hw3 is its own repository"             own_repo
@@ -43,7 +43,7 @@ check "3.4 five commits in total"                             five
 check "3.4 commit 4 message is 'Update notes'"                msg_n 4 "Update notes"
 check "3.4 amended commit does not contain the TODO line"     amend_clean
 check "3.5 commit 5 message is Revert \"Buy fireworks\""      msg_n 5 'Revert "Buy fireworks"'
-check "3.5 commit 5 is a normal commit on top of commit 4"    is_revert
+check "3.5 commit 5 sits on commit 4 and changes only list.txt" is_revert
 check "3.5 fireworks line is gone from list.txt in HEAD"      list_back
 check "3.5 first three commits were not rewritten"            old_kept
 check "3.6 no-undo=restore (answers file)"                    a_undo
