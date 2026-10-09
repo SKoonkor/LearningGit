@@ -1,0 +1,268 @@
+\input{../common/preamble}
+\begin{document}
+\lecturetitle{0}{Roadmap: What Git Is, Where It Came From, and How This Course Works}{Version control, a short history, Git versus GitHub, and the order of the lectures}
+
+\begin{goals}
+\begin{itemize}
+  \item Explain the problem that version control solves, in your own words.
+  \item Tell apart local, centralised and distributed version control.
+  \item Know the key moments in Git's history and a few quick facts about it.
+  \item Explain the difference between \emph{Git} and \emph{GitHub}.
+  \item Know the order of the lectures and how homework, checkers and solutions work.
+\end{itemize}
+\end{goals}
+
+\section{The problem: files change, and we forget how}
+
+Have you ever had a folder like this?
+
+\begin{lstlisting}
+report.docx
+report_v2.docx
+report_v2_final.docx
+report_v2_final_REALLY_final.docx
+report_v2_final_REALLY_final_use_this_one.docx
+\end{lstlisting}
+
+It works for a while, then it breaks down. Which file is the newest? What exactly changed between \code{v2} and \code{final}? What if a friend edits one copy while you edit another? Whose changes win? And if you delete a paragraph on Monday and need it back on Friday, where is it?
+
+A \textbf{version control system} (VCS) solves all of these. It is a tool that
+\begin{itemize}
+  \item records the history of your project as a series of saved states (\emph{versions});
+  \item lets you compare any two versions and go back to an old one;
+  \item lets several people work at the same time and combine their work.
+\end{itemize}
+You keep \emph{one} folder, and the tool remembers every earlier state of it.
+
+\begin{keyidea}
+Version control is a time machine plus a collaboration tool for your files. It is used for code, but also for papers, notes, thesis chapters and configuration files: anything made of text.
+\end{keyidea}
+
+\begin{quickfact}
+\textbf{Words you will meet soon} (each is explained properly in Lectures 1--5). A \emph{repository} is a project folder together with its saved history. A \emph{commit} is one saved version. A \emph{branch} is a separate line of work. A \emph{remote} is a copy of the repository stored somewhere else, such as GitHub. Do not worry if these feel vague now.
+\end{quickfact}
+
+\section{Three generations of version control}
+
+Version control tools came in three broad kinds. The diagram shows where the history of the project is stored in each.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  pc/.style={draw,rounded corners,fill=blue!6,minimum width=17mm,minimum height=9mm,font=\scriptsize,align=center},
+  store/.style={draw,rounded corners,fill=orange!15,minimum width=22mm,minimum height=11mm,font=\scriptsize,align=center},
+  head/.style={font=\small\bfseries,text=blue!50!black}]
+  % Local
+  \node[head] at (0,3.2) {1. Local};
+  \node[pc] (l1) at (0,1.9) {your\\computer};
+  \node[store] (ls) at (0,0.2) {history\\(same disk)};
+  \draw[link] (l1)--(ls);
+  % Centralised
+  \node[head] at (5.2,3.2) {2. Centralised};
+  \node[pc] (c1) at (3.9,1.9) {you};
+  \node[pc] (c2) at (6.5,1.9) {friend};
+  \node[store] (cs) at (5.2,0.2) {one server\\holds ALL history};
+  \draw[link] (c1)--(cs); \draw[link] (c2)--(cs);
+  % Distributed
+  \node[head] at (11.4,3.2) {3. Distributed};
+  \node[pc] (d1) at (9.9,1.9) {you\\[-1pt]\scriptsize full history};
+  \node[pc] (d2) at (12.9,1.9) {friend\\[-1pt]\scriptsize full history};
+  \node[store] (ds) at (11.4,0.2) {shared server\\(full history too)};
+  \draw[link,<->] (d1)--(ds); \draw[link,<->] (d2)--(ds); \draw[link,<->] (d1) to[bend left=18] (d2);
+\end{tikzpicture}
+\caption{Where the history lives. In a centralised system the server is the only complete copy. In a distributed system (Git) \emph{every} computer holds the complete history. Arrows show history being copied in either direction.}
+\label{fig:vcs3}
+\end{figure}
+
+\begin{description}[leftmargin=1.2em,style=nextline]
+\item[Local] The history is kept on one computer (for example RCS, 1982). Simple, but no real teamwork.
+\item[Centralised] One server holds the history; you download a working copy of the files and send changes back (for example CVS, Subversion). Teamwork is possible, but if the server is down or you have no internet, you cannot save history or look at old versions.
+\item[Distributed] Everyone has a full copy of the whole history (Git, Mercurial). You can work offline, save versions as often as you like, and copy history to or from any other computer, with or without a server. A shared server is still useful, but it is a convenience, not a requirement.
+\end{description}
+
+\section{A short history of Git}
+
+This section is background. Read it for context; you will not be tested on dates.
+
+\begin{history}
+Git was created in \textbf{April 2005} by Linus Torvalds, the creator of Linux. The Linux kernel team had been using a proprietary distributed tool called BitKeeper. When the free-use arrangement ended, the team needed a replacement. Torvalds wanted something fast, distributed, and safe against accidental corruption, and no existing free tool fit. He started writing Git on 3 April 2005. Within days Git could manage its own source code, and the kernel started using it that month. A few months later, Junio Hamano took over as maintainer, a role he still holds.
+\end{history}
+
+\begin{center}{\small
+\begin{tabular}{@{}r p{11.5cm}@{}}
+\toprule
+Year & Milestone \\
+\midrule
+1972 & SCCS: one of the first version-control tools (Bell Labs). \\
+2000 & Subversion (SVN) development starts (1.0 in 2004): a better centralised system, widely used for years. \\
+2005 & Git (Torvalds) and Mercurial appear within weeks of each other, both distributed. \\
+2008 & GitHub launches: a website for hosting Git repositories with tools for teamwork. \\
+2018 & Microsoft announces it will buy GitHub (the purchase completes the same year). \\
+2020 & New repositories on GitHub start on a branch called \code{main} instead of \code{master}; Git 2.28 lets you choose this name yourself (you do so in Homework 0). \\
+\bottomrule
+\end{tabular}}\end{center}
+
+\begin{quickfact}
+\begin{itemize}
+  \item Git is free, open source, and works on Linux, macOS and Windows. The word ``git'' is British slang for an unpleasant person; Torvalds joked that he names his projects after himself.
+  \item Every saved version in Git gets a unique ID: a 40-character code (by default) called a \emph{hash}, such as \code{3f2a9c1\dots}. You will usually need only the first 7 characters (Lecture 3 shows where to see them).
+\end{itemize}
+\end{quickfact}
+
+\section{Git is not GitHub}
+
+This is the most common confusion for beginners.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  big/.style={draw,rounded corners,minimum width=5.6cm,minimum height=2.6cm,align=center,text width=5.2cm,font=\small}]
+  \node[big,fill=blue!6] (git) at (0,0) {\textbf{Git}\\[2pt]a program on \emph{your} computer\\tracks versions of your files\\works fine with no internet};
+  \node[big,fill=orange!12] (gh) at (7.4,0) {\textbf{GitHub}\\[2pt]a website (a company)\\stores Git projects online\\adds sharing, reviews, issues};
+  \draw[link,<->] (git) -- node[above,font=\scriptsize] {push / pull} (gh);
+\end{tikzpicture}
+\caption{Git does the version tracking. GitHub is one place to keep a copy online and collaborate. Other sites (GitLab, Bitbucket, Codeberg) do a similar job.}
+\end{figure}
+
+An analogy: Git is like a very powerful ``version history'' feature, but for a whole folder, and it lives on your own computer. GitHub is like a shared cloud folder that stores that history online and lets friends comment on it. You can use Git without GitHub, but you cannot use GitHub's sharing without Git. In this course you learn Git first (Lectures 1--5), because GitHub's sharing features are built on top of it.
+
+\Needspace{26\baselineskip}
+\section{The order of the course}
+
+The order below rises in difficulty. \textbf{Each lecture reuses what you learned in the previous one.}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  lec/.style={draw,rounded corners,minimum width=26mm,minimum height=13mm,align=center,font=\scriptsize,text width=24mm},
+  g/.style={lec,fill=blue!8}, h/.style={lec,fill=orange!15}, a/.style={lec,fill=green!10}]
+  \node[g] (l1) at (0,0)    {\textbf{L1}\\Install, config, first repository};
+  \node[g] (l2) at (3.2,0)  {\textbf{L2}\\Snapshots: add \& commit};
+  \node[g] (l3) at (6.4,0)  {\textbf{L3}\\History \& undoing};
+  \node[g] (l4) at (9.6,0)  {\textbf{L4}\\Branches};
+  \node[g] (l5) at (12.8,0) {\textbf{L5}\\Merging \& conflicts};
+  \node[h] (l6) at (0,-2.4)    {\textbf{L6}\\Remotes \& GitHub};
+  \node[h] (l7) at (3.2,-2.4)  {\textbf{L7}\\Pull requests \& reviews};
+  \node[a] (l8) at (6.4,-2.4)  {\textbf{L8}\\Rebase \& clean history};
+  \node[a] (l9) at (9.6,-2.4)  {\textbf{L9}\\GitHub features};
+  \node[a] (l10) at (12.8,-2.4) {\textbf{L10}\\Recovery \& internals};
+  \draw[link] (l1)--(l2); \draw[link] (l2)--(l3); \draw[link] (l3)--(l4); \draw[link] (l4)--(l5);
+  \draw[link,rounded corners] (l5.south) -- ++(0,-0.6) -| (l6.north);
+  \draw[link] (l6)--(l7); \draw[link] (l7)--(l8); \draw[link] (l8)--(l9); \draw[link] (l9)--(l10);
+  \node[font=\small\bfseries,text=blue!50!black,anchor=west] at (-1.3,1.1) {Part A: Git on your own computer (L1--L5)};
+  \node[font=\small\bfseries,text=orange!60!black,anchor=west] at (-1.3,-4.0) {Parts B and C: sharing with GitHub (L6--L7), then advanced tools (L8--L10)};
+\end{tikzpicture}
+\caption{Course map. Blue (L1--5): Git on one computer. Orange (L6--7): sharing and teamwork. Green (L8--10): advanced tools. Follow the arrows.}
+\end{figure}
+
+\begin{center}
+\small\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}c >{\raggedright\arraybackslash}p{4.4cm} >{\raggedright\arraybackslash}p{8.2cm}@{}}
+\toprule
+\# & Lecture & What you can do afterwards \\
+\midrule
+1 & First steps & Install and configure Git; turn a folder into a repository \\
+2 & Snapshots & Save versions with \code{add} and \code{commit}; ignore files \\
+3 & History \& undoing & Read the history; compare versions; undo mistakes safely \\
+4 & Branches & Work on an idea separately without breaking the main line \\
+5 & Merging \& conflicts & Combine branches; resolve a conflict calmly \\
+6 & Remotes \& GitHub & Put your project on GitHub; \code{clone}, \code{push}, \code{pull} \\
+7 & Pull requests \& reviews & Contribute to a friend's project; review each other's work \\
+8 & Rebase & Tidy up commit history; know when \emph{not} to \\
+9 & GitHub features & Issues, automated checks (Actions), releases, web pages \\
+10 & Recovery \& internals & Rescue ``lost'' work; see what is inside \code{.git} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Why this order?} GitHub's sharing is Git with a website on top, so we first learn Git alone (L1--5), where mistakes cannot affect anyone else. We first learn how a single copy of a project works. Rebase and recovery come last because they are most useful once you understand the simpler tools they replace or repair.
+
+\textbf{What you need.} No programming experience. A computer, a text editor (any will do, even Notepad or TextEdit in plain-text mode), a terminal (a text window where you type commands instead of clicking), and a free GitHub account (needed from Lecture~6). Plan one to two hours per lecture.
+
+\section{How the homework works}
+
+\begin{keyidea}
+Type every command yourself. Reading about Git is not enough: your hands need to learn it too. Mistakes in a practice repository cost nothing.
+\end{keyidea}
+
+\Needspace{8\baselineskip}
+Each lecture ends with a \textbf{Homework} box with tasks. You will do the work in the terminal. Each lecture comes with three helpers:
+
+\begin{enumerate}
+  \item \textbf{A setup script}, \code{codeHints/Lxx/setup\_hwX.sh}, which builds a practice repository in the \code{practice/} folder, already in the starting state for the tasks.
+  \item \textbf{A checker}, \code{codeHints/Lxx/check\_hwX.sh}, which looks at your repository and prints \code{PASS} or \code{FAIL} for each task.
+  \item \textbf{Solutions}, in two places: at the end of every lecture PDF, always starting on a new page, and as a separate PDF in \code{solutions/Lxx/}.
+\end{enumerate}
+
+Here \code{Lxx} stands for a lecture folder such as \code{L02}, and \code{hwX} for its homework number. The course folder looks like this:
+\begin{lstlisting}
+LearningGit/
+  lectures/     the PDFs
+  codeHints/    setup and check scripts for each lecture
+  solutions/    solution PDFs
+  practice/     your sandbox repositories (created by the setup scripts)
+\end{lstlisting}
+The workflow is: read the lecture, run the setup script, do the tasks, run the checker until everything says \code{PASS}, and \emph{only then} open the solutions to compare your approach with the reference.
+
+Always start in the course folder \code{LearningGit/}. (\code{cd} means ``change directory''; Lecture~1 explains it.) Here is an \emph{illustration} from Lecture~2; do not run it yet:
+\begin{lstlisting}
+$ bash codeHints/L02/setup_hw2.sh     # build the practice repository
+$ cd practice/hw2                     # go into it and do the tasks
+$ bash ../../codeHints/L02/check_hw2.sh
+PASS  2.1 first commit exists
+FAIL  2.2 file notes.txt is committed
+\end{lstlisting}
+
+If a check says \code{FAIL}, fix your repository and run the checker again.
+
+In terminal listings, a line that starts with \code{\$} is what \emph{you} type (do not type the \code{\$} itself). Other lines are what the computer prints. Text after \code{\#} is a comment.
+
+\textbf{Note for Windows and macOS.} The scripts run with the \code{bash} command. On Windows, use \emph{Git Bash} (installed with Git for Windows). On macOS, \code{bash script.sh} works even though the default shell is \code{zsh}.
+
+\section{Homework 0}
+
+\begin{homework}{0: Get ready}
+You need a terminal and Git installed. A \emph{terminal} is a window where you type commands. Open it as follows (Lecture~1 teaches the basics):
+\begin{itemize}
+  \item \textbf{macOS:} open the app \emph{Terminal} (Spotlight search). Typing \code{git --version} offers to install Git if it is missing.
+  \item \textbf{Windows:} install Git from \url{https://git-scm.com/downloads}, then open \emph{Git Bash} from the Start menu.
+  \item \textbf{Linux:} open your terminal and install Git with your package manager, for example \code{sudo apt install git}.
+\end{itemize}
+
+\begin{description}[leftmargin=1.2em,style=nextline]
+\item[0.1 Install] Install Git if needed (on Windows, open Git Bash only after installing), then run \code{git --version} in the terminal. It should print a version, such as \code{git version 2.43.0}. You need version 2.28 or newer (older versions do not support the setting in 0.3; if yours is older, update from \url{https://git-scm.com/downloads}).
+\item[0.2 Introduce yourself] Tell Git who you are. Every saved version records its author. Keep the quotation marks and replace the placeholder text with your own:
+\begin{lstlisting}
+$ git config --global user.name "Your Name"
+$ git config --global user.email "you@example.com"
+\end{lstlisting}
+Use the same email you use (or will use) on GitHub.
+\item[0.3 Default branch name] Set the name of the first branch of new repositories to \code{main}. (A branch is a line of saved versions; you meet it in Lecture~4, so for now just copy the command.)
+\begin{lstlisting}
+$ git config --global init.defaultBranch main
+\end{lstlisting}
+\item[0.4 Short answer] In two or three sentences, explain the difference between Git and GitHub, as if to a friend who has never heard of either.
+\item[0.5 GitHub account] Create a free account at \url{https://github.com} (needed from Lecture~6).
+\item[0.6 Thinking] Name a time you wished you had version control.
+\end{description}
+\textbf{Check yourself:} run \code{bash codeHints/L00/check\_hw0.sh} from the course folder (\code{LearningGit/}). It checks tasks 0.1--0.3. Tasks 0.4--0.6 you compare with the solutions.
+\end{homework}
+
+\section{Summary}
+
+\begin{itemize}
+  \item Version control records a project's history so you can compare, go back and collaborate. Git (Torvalds, 2005) is distributed: every copy holds the full history.
+  \item Git is the tool on your computer; GitHub is a website that hosts Git projects.
+  \item The course goes from Git on your own computer (L1--5) to sharing (L6--7) to advanced tools (L8--10).
+\end{itemize}
+
+\section*{Further reading}
+\begin{itemize}
+  \item S.\ Chacon \& B.\ Straub, \emph{Pro Git}, free at \url{https://git-scm.com/book}: Chapter 1, ``Getting Started''. Also \url{https://docs.github.com}.
+\end{itemize}
+
+\solutionspage
+
+\input{solutions_body}
+
+\end{document}
