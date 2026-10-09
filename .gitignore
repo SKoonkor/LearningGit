@@ -9,3 +9,6 @@
 # Practice sandboxes created by setup scripts
 practice/
 .DS_Store
+
+# Local tool files and settings (never commit)
+local/
