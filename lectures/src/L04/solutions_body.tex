@@ -38,7 +38,7 @@ $ printf 'branches=4\nbranch-is=pointer\n' > ../hw4_answers.txt
 
 \textbf{4.4.} \code{git branch -m old new} renames. The branch still points at the first commit, so the checker's ``experiment is the first commit'' test passes.
 
-\textbf{4.5.} \code{git branch hotfix main~1} creates the label at the parent of the newest \code{main} commit, which is \code{Add app file}, without switching. (\code{git switch -c} would also have created it, but you would then have to switch back.)
+\textbf{4.5.} \code{git branch hotfix main\textasciitilde{}1} creates the label at the parent of the newest \code{main} commit, which is \code{Add app file}, without switching. (\code{git switch -c} would also have created it, but you would then have to switch back.)
 
 \textbf{4.6.} The four branches are \code{experiment}, \code{hotfix}, \code{main} and \code{shopping}. The word is \textbf{pointer}; ``label'' and ``reference'' are also accepted.
 
