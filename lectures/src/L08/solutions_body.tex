@@ -1,0 +1,72 @@
+\section*{Solutions to Homework 8}
+
+\begin{lstlisting}
+$ bash codeHints/L08/setup_hw8.sh
+$ cd practice
+$ git clone hw8_server.git hw8
+$ cd hw8
+$ git log --oneline --graph --all --decorate
+$ git switch feature
+$ git rebase -i main
+\end{lstlisting}
+
+The editor opens with the five commits, oldest first (your IDs differ from here on):
+
+\begin{lstlisting}
+pick 74e9302 Add greeting
+pick b8385c7 wip
+pick c59f243 fix typo
+pick 3b4d390 add farewell
+pick 83ae7a6 oops
+\end{lstlisting}
+
+Change the first word of lines 2 to 5, save and close:
+
+\begin{lstlisting}
+pick 74e9302 Add greeting
+fixup b8385c7 wip
+fixup c59f243 fix typo
+reword 3b4d390 add farewell
+fixup 83ae7a6 oops
+\end{lstlisting}
+
+Git replays \code{Add greeting} first and stops with a conflict in \code{README.md}, because \code{main}'s newest commit also added a line there. In the file, the part above \code{=======} is \code{main}'s line and the part below is yours; keep both:
+
+\begin{lstlisting}
+# Greeter
+Maintained by the team.
+Usage: run the greeter.
+\end{lstlisting}
+
+\begin{lstlisting}
+$ git add README.md
+$ git rebase --continue          # an editor opens for the reword step:
+                                 # change "add farewell" to "Add farewell", save, close
+$ git log --oneline main..feature
+$ git push                       # rejected (non-fast-forward): expected
+$ git push --force-with-lease
+$ git log --oneline origin/hotfix -1
+$ git switch main
+$ git cherry-pick <that-id>
+$ git push
+$ printf 'shared-rebase=no\nsafer-force=force-with-lease\nnew-ids=rebase\n' > ../hw8_answers.txt
+\end{lstlisting}
+
+\textbf{8.2.} \code{fixup} merges a commit into the one above and keeps the \emph{upper} message, so \code{wip} and \code{fix typo} disappear into \code{Add greeting}, and \code{oops} into \code{Add farewell}. \code{reword} stops once more so that you can fix the capital letter. If you used \code{squash} instead of \code{fixup}, Git opens an editor with combined messages, and you must delete the extra ones, otherwise the checker finds the wrong messages.
+
+\textbf{8.3.} Two commits, \code{Add greeting} and \code{Add farewell}, on top of \code{Update README}. If \code{git log --oneline main..feature} shows five commits, you ran a plain rebase without \code{-i} or forgot to edit the list.
+
+\textbf{8.4.} The rebase created copies of the commits, so the server's \code{feature} (with the old five) is no longer an ancestor of yours, and a normal push is rejected. \code{--force-with-lease} is allowed to replace it because the server's branch is exactly where you last saw it.
+
+\textbf{8.5.} \code{git cherry-pick} copies the hotfix commit onto \code{main}: a \emph{new} commit with the same change and message. The original stays on \code{hotfix}. \code{main} remains a straight line of four commits. (Merging \code{hotfix} would add the original commit and a merge commit, which the checker rejects.)
+
+\textbf{8.6.} \code{shared-rebase=no} (golden rule), \code{safer-force=force-with-lease}, \code{new-ids=rebase} (merge keeps all existing commits and only adds one).
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes.}
+\begin{itemize}
+  \item Merging \code{main} into \code{feature} instead of rebasing: the history keeps five messy commits plus a merge commit.
+  \item Leaving the rebase unfinished (after a conflict you must \code{git add} and \code{git rebase --continue}). \code{git status} says \code{rebase in progress}; the checker's last check fails until you finish or \code{git rebase --abort}.
+  \item Using plain \code{git push --force}. It works here, but it is exactly the habit the lecture warns against; use \code{--force-with-lease}.
+  \item Stuck in the vim editor: press \code{Esc}, type \code{:wq}, press Enter. To cancel the whole rebase instead, type \code{:q!} on an empty todo list, or run \code{git rebase --abort}.
+\end{itemize}
