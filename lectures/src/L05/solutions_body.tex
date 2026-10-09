@@ -1,0 +1,57 @@
+\section*{Solutions to Homework 5}
+
+\begin{lstlisting}
+$ bash codeHints/L05/setup_hw5.sh
+$ cd practice/hw5
+$ git merge drinks
+Fast-forward
+$ git merge --no-edit desserts
+$ git merge --no-edit spicy
+$ git merge vegan                     # conflict in menu.txt
+$ git status                          # look, then cancel:
+$ git merge --abort
+$ git merge vegan                     # conflict again, now resolve it
+$ cat menu.txt
+<<<<<<< HEAD
+Pizza (spicy)
+=======
+Pizza (vegan)
+>>>>>>> vegan
+Pasta
+\end{lstlisting}
+
+Edit \code{menu.txt} so that it contains exactly
+
+\begin{lstlisting}
+Pizza (spicy, vegan)
+Pasta
+\end{lstlisting}
+
+then finish and clean up:
+
+\begin{lstlisting}
+$ git add menu.txt
+$ git commit --no-edit
+$ git branch -d drinks desserts spicy vegan
+$ git log --merges --oneline          # three lines
+$ printf 'above=spicy\nmerge-commits=3\n' > ../hw5_answers.txt
+\end{lstlisting}
+
+\textbf{5.1.} \code{main} had no commits of its own beyond the shared start, so Git fast-forwarded: no merge commit, and \code{main} now points where \code{drinks} points. If you used \code{--no-ff}, you get an extra merge commit and the checker reports four merges.
+
+\textbf{5.2 and 5.3.} \code{main} had moved (it contains \code{drinks}), so Git made a merge commit each time. \code{desserts} adds a new file and \code{spicy} edits \code{menu.txt}, which \code{main} has not changed, so there is nothing to resolve.
+
+\textbf{5.4.} \code{spicy} and \code{vegan} both changed line~1 of \code{menu.txt}, which makes a conflict. Between \code{<<<<<<< HEAD} and \code{=======} stands \emph{your side}, the branch you are on. Because \code{spicy} was merged into \code{main} first, that is the spicy version, which is why the answer to 5.6 is \code{above=spicy}. After the abort \code{git status} says \code{working tree clean}: the merge never happened, and you can try again. Any text that mentions both words on line~1 passes the checker. The line \code{Pasta} was not part of the conflict and stays unchanged. Check that no marker line is left with \code{grep -n '<<<<\textbackslash|====\textbackslash|>>>>' menu.txt} (it should print nothing).
+
+\textbf{5.5.} \code{git branch -d} works because every branch is now fully merged. Had Git refused, that would indicate an unmerged branch.
+
+\textbf{5.6.} Three merge commits: \code{desserts}, \code{spicy} and \code{vegan}. The \code{drinks} fast-forward made none.
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes.}
+\begin{itemize}
+  \item Merging \code{vegan} before \code{spicy}. Then \code{vegan}'s version stands above the divider, but the checker expects \code{above=spicy}, so follow the order of the tasks.
+  \item Committing with the marker lines still in the file. Open the file and check.
+  \item Running \code{git commit} without \code{git add menu.txt} first: Git refuses and says the path is unmerged.
+  \item Running \code{git merge --abort} \emph{after} the final commit: it no longer applies. Use \code{setup\_hw5.sh --reset} and start again.
+\end{itemize}

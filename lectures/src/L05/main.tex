@@ -1,0 +1,361 @@
+\input{../common/preamble}
+\tikzset{
+  cbx/.style={draw,rounded corners,fill=blue!6,minimum width=2.1cm,minimum height=9mm,align=center,font=\scriptsize\ttfamily,inner sep=2pt}}
+\begin{document}
+\lecturetitle{5}{Merging Branches and Resolving Conflicts}{Fast-forward merges, merge commits, conflict markers, and \texttt{git merge --abort}}
+
+\begin{goals}
+\begin{itemize}
+  \item Merge one branch into another and say which kind of merge Git performed.
+  \item Explain why a merge commit has two parents, and how Git combines two lines of work.
+  \item Read the conflict markers in a file and resolve a conflict step by step.
+  \item Cancel a merge safely with \code{git merge --abort}.
+  \item Delete branches once they are merged.
+\end{itemize}
+\end{goals}
+
+\section{What merging means}
+
+In Lecture 4 you created branches and let the history fork. \textbf{Merging} is the other half of the story: bringing the commits of one branch into another, so that the finished work ends up on \code{main}.
+
+The command is \code{git merge}, and its direction matters:
+
+\begin{keyidea}
+You first \emph{switch to the branch that should receive the work}, then run \code{git merge <other-branch>}. The current branch changes; the other branch is left untouched. \code{git merge waffles} while on \code{main} means ``bring \code{waffles} into \code{main}''.
+\end{keyidea}
+
+Before every merge, get into the habit of two checks: \code{git status} (the working directory should be clean, with everything committed) and \code{git branch --show-current} (you must be on the receiving branch).
+
+For this lecture we use a practice repository with the same starting point on every computer. From the course folder run:
+
+\begin{lstlisting}
+$ bash codeHints/L05/setup_demo5.sh
+$ cd practice/demo5
+$ git log --oneline --graph --all --decorate
+* fbed2d3 (vanilla) Pancakes with vanilla
+| * 0725dd2 (syrup) Pancakes with syrup
+|/
+| * 633affa (shopping) Add shopping list
+|/
+| * df478ec (crepes) Add crepe recipe
+|/
+* 7ad9635 (HEAD -> main) Add pancake recipe
+* 3f587ea Add README
+\end{lstlisting}
+
+\code{main} has two commits, and four branches start from its tip. We will merge them one after another, and each one teaches a different case. (To restart at any time: leave the folder with \code{cd ../..}, run \code{setup\_demo5.sh --reset}, then \code{cd practice/demo5}.)
+
+\section{Case 1: the fast-forward merge}
+
+The branch \code{crepes} added one commit on top of \code{main}'s latest commit, and \code{main} has not moved since. Nothing needs combining: Git only has to slide the \code{main} label forward.
+
+\begin{lstlisting}
+$ git merge crepes
+Updating 7ad9635..df478ec
+Fast-forward
+ crepes.txt | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 crepes.txt
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[font=\small\bfseries,anchor=west] at (-1.6,2.0) {before};
+  \node[cbx] (a1) at (0,0)   {7ad9635};
+  \node[cbx] (b1) at (3.4,0) {df478ec};
+  \draw[link] (b1)--(a1);
+  \node[branchtag] (m1) at (0,1.2) {main}; \draw[link] (m1)--(a1);
+  \node[branchtag] (c1) at (3.4,1.2) {crepes}; \draw[link] (c1)--(b1);
+  \node[font=\small\bfseries,anchor=west] at (-1.6,-1.2) {after \code{git merge crepes}};
+  \node[cbx] (a2) at (0,-3.2)   {7ad9635};
+  \node[cbx] (b2) at (3.4,-3.2) {df478ec};
+  \draw[link] (b2)--(a2);
+  \node[branchtag] (m2) at (2.7,-2.0) {main}; \draw[link] (m2)--(b2);
+  \node[branchtag] (c2) at (4.3,-2.0) {crepes}; \draw[link] (c2)--(b2);
+\end{tikzpicture}
+\caption{A fast-forward merge. No new commit is created: the \code{main} label just moves forward to the commit \code{crepes} already points at. The history stays a straight line.}
+\label{fig:ff}
+\end{figure}
+
+\begin{quickfact}
+A fast-forward is possible only when the receiving branch has \emph{no commits of its own} beyond the shared starting point. If you ever want a visible merge commit even then, use \code{git merge --no-ff}.
+\end{quickfact}
+
+\section{Case 2: the merge commit}
+
+Next, \code{shopping}. It also started from the old \code{Add pancake recipe} commit, but \code{main} has moved on (it now has the crepe commit). The two lines of work have diverged, so Git cannot just slide a label. It must \emph{combine} them:
+
+\begin{lstlisting}
+$ git merge --no-edit shopping
+Merge made by the 'ort' strategy.
+ shopping.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100644 shopping.txt
+\end{lstlisting}
+
+(Older Git versions print \code{recursive} instead of \code{ort}. Without \code{--no-edit}, Git opens an editor so that you can confirm the merge message; just save and close it. We skip it with \code{--no-edit}.)
+
+Git made a \textbf{merge commit}, a special commit with \emph{two parents}: one from each line of work.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[font=\small\bfseries,anchor=west] at (-1.6,1.7) {before};
+  \node[cbx] (p1) at (0,0) {7ad9635};
+  \node[cbx] (m1) at (3.4,0.8) {df478ec};
+  \node[cbx] (s1) at (3.4,-0.8) {633affa};
+  \draw[link] (m1)--(p1); \draw[link] (s1)--(p1);
+  \node[branchtag] (mt1) at (5.9,0.8) {main}; \draw[link] (mt1)--(m1);
+  \node[branchtag] (st1) at (6.0,-0.8) {shopping}; \draw[link] (st1)--(s1);
+  \node[font=\scriptsize,text=black!60,anchor=north] at (0,-0.55) {common ancestor};
+  \node[font=\small\bfseries,anchor=west] at (-1.6,-2.2) {after the merge};
+  \node[cbx] (p2) at (0,-4.2) {7ad9635};
+  \node[cbx] (m2) at (3.4,-3.4) {df478ec};
+  \node[cbx] (s2) at (3.4,-5.0) {633affa};
+  \node[cbx,fill=green!15] (x2) at (6.8,-4.2) {52cdd3d};
+  \draw[link] (m2)--(p2); \draw[link] (s2)--(p2);
+  \draw[link] (x2)--(m2); \draw[link] (x2)--(s2);
+  \node[branchtag] (mt2) at (6.8,-3.0) {main}; \draw[link] (mt2)--(x2);
+  \node[branchtag] (st2) at (3.4,-6.0) {shopping}; \draw[link] (st2)--(s2);
+  \node[font=\scriptsize,text=green!40!black,anchor=west,align=left] at (7.7,-4.2) {merge commit:\\two parents};
+\end{tikzpicture}
+\caption{A three-way merge. Git finds the common ancestor of the two branches and creates a merge commit whose two parents are the two tips. \code{main} moves onto it; \code{shopping} stays where it was.}
+\label{fig:threeway}
+\end{figure}
+
+The name \emph{three-way} comes from the three versions Git looks at: the common ancestor (the \textbf{base}) and the two branch tips. It compares each tip with the base to see what each side changed, then combines the changes. The rules are simple:
+
+\begin{center}
+\small
+\begin{tabular}{@{}l l@{}}
+\toprule
+What happened since the base & Result \\
+\midrule
+only one side changed a part of a file & Git takes that side's change \\
+both sides changed \emph{different} parts of a file & Git applies both changes \\
+both sides changed the \emph{same part} differently & \textbf{conflict}: Git asks you \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Look at the history, and at the two parents of the merge commit:
+
+\begin{lstlisting}
+$ git log --oneline --graph --decorate -4
+*   52cdd3d (HEAD -> main) Merge branch 'shopping'
+|\
+| * 633affa (shopping) Add shopping list
+* | df478ec (crepes) Add crepe recipe
+|/
+* 7ad9635 Add pancake recipe
+$ git log -1 --format="%h parents: %p"
+52cdd3d parents: df478ec 633affa
+$ git log --merges --oneline
+52cdd3d Merge branch 'shopping'
+\end{lstlisting}
+
+(The merge commit's own ID depends on the time you run the merge, so yours will differ from \code{52cdd3d}. The other IDs are fixed.) The command \code{git log --merges} lists only merge commits.
+
+\begin{tryit}
+Merge \code{syrup} as well: \code{git merge --no-edit syrup}. It changes line~1 of \code{recipes.txt}, while nothing on \code{main} has touched that file, so Git applies the change on its own. Check \code{cat recipes.txt} and the graph.
+\end{tryit}
+
+\Needspace{14\baselineskip}
+\section{Case 3: the conflict}
+
+Now the branch we have been waiting for. \code{main} (through \code{syrup}) and \code{vanilla} both changed the \emph{same line} of \code{recipes.txt}. Git cannot know which version you want:
+
+\begin{lstlisting}
+$ git merge vanilla
+Auto-merging recipes.txt
+CONFLICT (content): Merge conflict in recipes.txt
+Automatic merge failed; fix conflicts and then commit the result.
+\end{lstlisting}
+
+\begin{keyidea}
+A conflict is not an error and nothing is broken. It is Git saying: ``Both sides edited this spot. A human has to decide.'' The merge is paused halfway, waiting for you. Your earlier commits are completely safe.
+\end{keyidea}
+
+\subsection{Step 1: see what is going on}
+
+\begin{lstlisting}
+$ git status
+On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both modified:   recipes.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+$ git status --short
+UU recipes.txt
+\end{lstlisting}
+
+\code{both modified} (\code{UU} in the short form) marks the conflicted file. Git has already merged everything it could in other files; only the files listed here need your attention. Note the second hint: \code{git merge --abort} is your escape hatch (Step 5).
+
+\subsection{Step 2: read the conflict markers}
+
+Git has written both versions into the file, separated by markers:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  ln/.style={font=\small\ttfamily,anchor=west,inner sep=3pt,minimum height=6.5mm,text width=7.6cm},
+  note/.style={font=\scriptsize,anchor=west,text width=5.6cm}]
+  \node[ln,fill=black!10] (l1) at (0,0)    {<<<<<<< HEAD};
+  \node[ln,fill=blue!10]  (l2) at (0,-0.65) {Pancakes: flour, milk, eggs, syrup};
+  \node[ln,fill=black!10] (l3) at (0,-1.3)  {=======};
+  \node[ln,fill=orange!15] (l4) at (0,-1.95) {Pancakes: flour, milk, eggs, vanilla};
+  \node[ln,fill=black!10] (l5) at (0,-2.6)  {>>>>>>> vanilla};
+  \node[note] at (8.1,0)     {start marker; the part below is \textbf{your side}, from the branch you are on (\code{HEAD}, here \code{main})};
+  \node[note] at (8.1,-0.65) {your version of the line};
+  \node[note] at (8.1,-1.3)  {divider between the two versions};
+  \node[note] at (8.1,-1.95) {the \textbf{other side}, from the branch being merged};
+  \node[note] at (8.1,-2.6)  {end marker, with the branch name};
+\end{tikzpicture}
+\caption{Anatomy of a conflict in \code{recipes.txt}. The three marker lines are not part of your text; they must all be removed.}
+\label{fig:markers}
+\end{figure}
+
+\subsection{Step 3: decide and edit}
+
+Open \code{recipes.txt} in any text editor. You have three choices: keep your side, keep the other side, or (the usual choice) combine them by writing the line you actually want. Delete the marker lines and leave only the final text. We want both ingredients:
+
+\begin{lstlisting}
+Pancakes: flour, milk, eggs, syrup, vanilla
+\end{lstlisting}
+
+\begin{pitfall}
+The file must contain \emph{no} \code{<<<<<<<}, \code{=======} or \code{>>>>>>>} lines when you are finished. Git will not stop you from committing them, and the file will then be broken. Search for \code{<<<<} before you continue.
+\end{pitfall}
+
+\subsection{Step 4: tell Git it is resolved, and finish}
+
+\begin{lstlisting}
+$ git add recipes.txt
+$ git status
+On branch main
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+	modified:   recipes.txt
+
+$ git commit --no-edit
+[main 6e9ef86] Merge branch 'vanilla'
+\end{lstlisting}
+
+\code{git add} here means ``this file is resolved''. \code{git commit} completes the merge with the prepared message \code{Merge branch 'vanilla'} (drop \code{--no-edit} to edit it).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  blk/.style={draw,rounded corners,fill=blue!6,minimum width=3.0cm,minimum height=10mm,align=center,font=\small},
+  dec/.style={draw,diamond,aspect=2.2,fill=yellow!20,align=center,font=\small,inner sep=1pt},
+  bad/.style={draw,rounded corners,fill=red!8,minimum width=3.0cm,minimum height=10mm,align=center,font=\small}]
+  \node[blk] (m) at (0,0) {\code{git merge x}};
+  \node[dec] (c) at (4.0,0) {conflict?};
+  \node[blk,fill=green!12] (ok) at (4.0,-2.0) {done: merge\\finished};
+  \node[blk] (e) at (8.2,0) {1.~\code{git status}\\2.~edit the file};
+  \node[blk] (a) at (8.2,-2.0) {3.~\code{git add file}\\4.~\code{git commit}};
+  \node[bad] (ab) at (4.0,2.0) {\code{git merge --abort}\\back to before};
+  \draw[link] (m)--(c);
+  \draw[link] (c)--node[right,font=\scriptsize] {no} (ok);
+  \draw[link] (c)--node[above,font=\scriptsize] {yes} (e);
+  \draw[link] (e)--(a);
+  \draw[link] (a)--(ok);
+  \draw[link,dashed] (c)--node[right,font=\scriptsize] {\ or give up} (ab);
+\end{tikzpicture}
+\caption{The conflict workflow. You can leave through the red box at any time before the final \code{git commit}.}
+\label{fig:flow}
+\end{figure}
+
+\subsection{Step 5: or abort}
+
+Unsure, or want to start again? Cancel the whole merge. Git puts everything back exactly as it was before you typed \code{git merge}:
+
+\begin{lstlisting}
+$ git merge --abort
+$ git status
+On branch main
+nothing to commit, working tree clean
+\end{lstlisting}
+
+This is the safest way to practise: start a merge, look at the conflict, abort, and try again. \code{--abort} works only while the merge is unfinished; after the final \code{git commit} the merge is done.
+
+\begin{quickfact}
+Git conflicts not only when two people change the \emph{same} line, but also when changes touch \emph{neighbouring} lines. If \code{main} had added a new line directly under the \code{Pancakes} line, then merging \code{syrup} (which edits that line) would have conflicted too. Conflicts are normal in teamwork, and they are easy once you have resolved a few.
+\end{quickfact}
+
+\section{Cleaning up}
+
+A merged branch has done its job. Its commits are now part of \code{main}, so the label can go. In Lecture 4 the command \code{git branch -d} refused to delete an unmerged branch; now it agrees:
+
+\begin{lstlisting}
+$ git branch -d crepes shopping syrup vanilla
+Deleted branch crepes (was df478ec).
+Deleted branch shopping (was 633affa).
+Deleted branch syrup (was 0725dd2).
+Deleted branch vanilla (was fbed2d3).
+$ git branch
+* main
+\end{lstlisting}
+
+Deleting only removes the label; the commits stay in \code{main}'s history. The usual life cycle of a branch is therefore: \emph{create, commit, merge, delete}.
+
+Run \code{git log --oneline --graph} now: the graph tells the whole story, with three merge commits, each with two parents.
+
+\begin{pitfall}
+\textbf{Two common merge mistakes.} (1) Merging in the wrong direction: always \code{git switch} to the receiving branch first, and read the first line of \code{git status}. (2) Starting a merge with uncommitted changes: commit or discard them first, otherwise Git may refuse or mix them into the merge.
+\end{pitfall}
+
+\begin{quickfact}
+Merging a branch that is already included gives \code{Already up to date.} and changes nothing. If you regret a \emph{finished} merge, a merge commit can be undone with \code{git revert -m 1 <merge-commit>} (\code{-m 1} says which parent to keep). Lecture 10 shows more ways to go back.
+\end{quickfact}
+
+\Needspace{10\baselineskip}
+\section{Homework 5}
+
+\begin{homework}{5: Merge them all}
+From the course folder run:
+\begin{lstlisting}
+$ bash codeHints/L05/setup_hw5.sh
+$ cd practice/hw5
+\end{lstlisting}
+You get \code{main} (two commits) and four branches: \code{drinks}, \code{desserts}, \code{spicy} and \code{vegan}. Look first with \code{git log --oneline --graph --all --decorate}. Do the tasks \emph{in this order}. To start over, run \code{setup\_hw5.sh --reset} from the course folder.
+
+\begin{description}[leftmargin=1.2em,style=nextline]
+\item[5.1 First merge] Merge \code{drinks} into \code{main}. (Which kind of merge will it be? Check that Git printed \code{Fast-forward}.)
+\item[5.2 Second merge] Merge \code{desserts}. Use \code{--no-edit}.
+\item[5.3 Third merge] Merge \code{spicy}. Use \code{--no-edit}.
+\item[5.4 The conflict] Merge \code{vegan}. Git reports a conflict in \code{menu.txt}. First look: run \code{git status}, open the file, then cancel with \code{git merge --abort} and check that \code{git status} is clean. Now merge \code{vegan} again and resolve it for real: line 1 of \code{menu.txt} must mention \emph{both} \code{spicy} and \code{vegan} (for example \code{Pizza (spicy, vegan)}), line 2 stays \code{Pasta}, and no marker lines may remain. Add the file and finish with \code{git commit --no-edit}.
+\item[5.5 Clean up] Delete the four merged branches with \code{git branch -d}. Only \code{main} should remain.
+\item[5.6 Questions] In \code{practice/hw5\_answers.txt} (outside the repository) write two lines:
+\begin{lstlisting}
+above=<spicy or vegan>
+merge-commits=<number>
+\end{lstlisting}
+\code{above} is the branch whose version of the line was \emph{between} \code{<<<<<<< HEAD} and \code{=======} during the conflict in 5.4. \code{merge-commits} is the number of merge commits in \code{main} (look at \code{git log --merges --oneline}).
+\end{description}
+
+\textbf{Check yourself:} from the course folder run \code{bash codeHints/L05/check\_hw5.sh}. All \code{PASS}, then compare with the solutions at the end of this lecture (or in \code{solutions/L05/}).
+\end{homework}
+
+\section{Summary}
+
+\begin{itemize}
+  \item \code{git merge X} brings branch \code{X} into the branch you are on. Switch to the receiver first; start from a clean working directory.
+  \item \textbf{Fast-forward}: the receiver has nothing new, so its label just slides forward. \textbf{Merge commit}: both sides have new commits; Git combines them in a commit with two parents.
+  \item A \textbf{conflict} means both sides changed the same spot. Open the file, choose or combine the versions, remove the markers, \code{git add}, then \code{git commit}. Use \code{git merge --abort} to cancel.
+  \item Afterwards, delete the branch with \code{git branch -d}.
+\end{itemize}
+
+\solutionspage
+
+\input{solutions_body}
+
+\end{document}
