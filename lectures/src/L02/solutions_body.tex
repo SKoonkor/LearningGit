@@ -1,0 +1,43 @@
+\section*{Solutions to Homework 2}
+
+Run from the course folder, then work inside \code{practice/hw2}:
+
+\begin{lstlisting}
+$ bash codeHints/L02/setup_hw2.sh
+$ cd practice/hw2
+$ git add README.md notes.txt
+$ git commit -m "Add README and notes"
+$ git add todo.txt
+$ git commit -m "Add todo list"
+$ echo "debug.log" > .gitignore
+$ echo "secret.env" >> .gitignore
+$ echo "build/" >> .gitignore
+$ git add .gitignore
+$ git commit -m "Add .gitignore"
+$ echo "Second note." >> notes.txt
+$ echo "- practice commits" >> todo.txt
+$ git add notes.txt
+$ git status --short
+M  notes.txt
+ M todo.txt
+$ echo "staging area" > ../hw2_areas.txt
+\end{lstlisting}
+
+\textbf{2.1.} Staging only the two named files leaves \code{todo.txt} untracked, so it is not in the first commit. \code{git add .} here would have wrongly included \code{todo.txt}, \code{debug.log}, \code{secret.env} and \code{build/}. If you made a mistake before committing, \code{git status} shows what is staged; you will learn to unstage in Lecture 3.
+
+\textbf{2.2.} Commit \code{todo.txt} on its own, so the history reads naturally.
+
+\textbf{2.3.} Create the ignore file \emph{before} anything adds the secrets. Check that \code{git status} no longer mentions the three items. (Optional: \code{git check-ignore -v debug.log secret.env build/output.bin} prints which rule matched each file.) \code{*.log} instead of \code{debug.log} also passes the checker.
+
+\textbf{2.4.} The \emph{first} column of \code{git status --short} describes the staging area, the \emph{second} the working directory. \code{M\ \ notes.txt} means ``staged change''; \code{\ M todo.txt} means ``modified but not staged''. A commit now would include only \code{notes.txt}. (Do not commit: the checker expects this state.)
+
+\textbf{2.5.} The \textbf{staging area}, also called the \textbf{index}. The answer file sits in \code{practice/}, outside \code{hw2}, so that it does not appear as an untracked file in the repository.
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes.}
+\begin{itemize}
+  \item Using \code{git add .} too early, which stages \code{secret.env} and the build files. Look at \code{git status} first.
+  \item Wrong commit messages: the checker compares them exactly, including capital letters.
+  \item Committing in task 2.4. If you did, the checker will report four commits. You can run \code{setup\_hw2.sh --reset} and do the tasks again.
+  \item Forgetting \code{-m}: an editor opens. Press \code{Esc}, type \code{:q!}, press Enter, and try again.
+\end{itemize}

@@ -2,6 +2,9 @@
 # Shared helpers for all checkers. Source this file: . "$(dirname "$0")/../common.sh"
 # Works with bash 3.2 (macOS default) and Git Bash on Windows.
 
+# Sorting and message text must not depend on the user's language settings.
+export LC_ALL=C
+
 PASS_COUNT=0
 FAIL_COUNT=0
 
