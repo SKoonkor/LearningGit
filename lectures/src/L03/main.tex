@@ -13,7 +13,7 @@
 
 \section{Why this lecture matters}
 
-Version control earns its keep when something goes wrong. Everyone saves the wrong file, mistypes a message, or deletes a line they needed. Git gives you a tool for each situation, but the tools differ in one crucial way: some are completely safe, and one throws work away for good. Learning which is which turns Git from scary into reassuring. In this lecture, the \emph{only} command that can lose something you did not commit is \code{git restore file}, and we will put a warning sign on it.
+Version control earns its keep when something goes wrong. Everyone saves the wrong file, mistypes a message, or deletes a line they needed. Git gives you a tool for each situation, but the tools differ in one crucial way: some are completely safe, and one throws work away for good. Learning which is which turns Git from scary into reassuring. In this lecture, the main command that can lose something you did not commit is \code{git restore file}, and we will put a warning sign on it. (\code{git rm -f}, at the end, is the other one.)
 
 We will use a small practice repository whose history is the same on every computer. From the course folder run:
 
@@ -256,7 +256,7 @@ The status is empty (clean) and the Muffins line is gone for good. (To \emph{loo
 
 \subsection{Undo an old commit safely: \texttt{git revert}}
 
-\code{git revert} undoes a commit by making a \emph{new} commit that does the opposite. Nothing is erased, so it is always safe, even for shared work. (The listing below assumes a clean \code{demo3} with no uncommitted changes. The new commit's ID depends on when you run it, so yours will differ from \code{02e79f4}.)
+\code{git revert} undoes a commit by making a \emph{new} commit that does the opposite. Nothing is erased, so it is always safe, even for shared work. (The listing below assumes a clean \code{demo3} with no uncommitted changes. The new commit's ID depends on when you run it, so yours will differ from \code{02e79f4}, and you may also see a \code{Date:} line.)
 
 \begin{lstlisting}
 $ git revert --no-edit HEAD
