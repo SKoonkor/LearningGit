@@ -1,0 +1,73 @@
+\section*{Solutions to Homework 6}
+
+\textbf{Part A.}
+
+\begin{lstlisting}
+$ bash codeHints/L06/setup_hw6.sh
+$ cd practice
+$ git clone hw6_server.git hw6
+$ cd hw6
+$ git remote -v                      # origin ... (fetch), origin ... (push)
+$ git branch -a
+* main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+$ echo "my work" > mine.txt
+$ git add mine.txt
+$ git commit -m "Add my work"
+$ git status                         # "ahead of 'origin/main' by 1 commit"
+$ printf 'remote=origin\nahead=1\nno-merge=fetch\n' > ../hw6_answers.txt
+$ cd ../..                           # back to the course folder
+$ bash codeHints/L06/friend.sh
+$ cd practice/hw6
+$ git push                           # rejected (fetch first)
+$ git config pull.rebase false
+$ git pull --no-edit                 # fetch + merge: one merge commit
+$ git log --oneline --graph
+$ git push
+$ git switch -c feature
+$ echo "feature" > feature.txt
+$ git add feature.txt
+$ git commit -m "Add feature file"
+$ git push -u origin feature
+\end{lstlisting}
+
+\textbf{6.1--6.2.} \code{git clone} created \code{hw6} with the full history and a remote named \code{origin} that points at the server folder. The remote's name is \code{origin} (Git chooses it for a clone), hence \code{remote=origin}.
+
+\textbf{6.3.} Your branch has one commit that \code{origin/main} lacks, so \code{git status} says ``ahead by 1 commit'' and \code{ahead=1}. Nothing is on the server yet.
+
+\textbf{6.4.} The friend's commit reached the server after you cloned, so the two copies diverged and \code{git push} is rejected with ``fetch first''. Plain \code{git pull} on a recent Git stops with ``Need to specify how to reconcile divergent branches'' (after already fetching); \code{git config pull.rebase false} chooses merge. The merge commit is the \emph{one} merge commit the checker expects. (\code{git fetch} followed by \code{git merge origin/main} gives the same result.)
+
+\textbf{6.5.} After the merge your \code{main} is ahead of \code{origin/main}, and a push is now a fast-forward for the server, so it is accepted.
+
+\textbf{6.6.} \code{-u} records that local \code{feature} tracks \code{origin/feature} (the checker reads \code{branch.feature.remote} and \code{branch.feature.merge} from your repository).
+
+\textbf{6.7.} \code{fetch}: it downloads and moves \code{origin/main} but changes neither your branches nor your files. \code{git pull} also merges.
+
+\textbf{Part B.}
+
+\begin{lstlisting}
+$ cd practice
+$ mkdir hw6_github
+$ cd hw6_github
+$ git init -b main
+$ echo "# Hello GitHub" > README.md
+$ git add README.md
+$ git commit -m "Add README"
+$ git remote add origin git@github.com:YOURNAME/hello-github.git
+$ git push -u origin main
+        (now edit README.md on github.com, "Commit changes")
+$ git pull
+$ git log --oneline                  # two commits
+\end{lstlisting}
+
+Replace \code{YOURNAME} by your GitHub user name. After the browser edit, GitHub is one commit ahead of you, so \code{git pull} brings it in as a fast-forward and your local \code{main} again equals GitHub's.
+
+\Needspace{8\baselineskip}
+\textbf{Common mistakes and fixes.}
+\begin{itemize}
+  \item Running \code{friend.sh} before cloning, or pushing before 6.4. Then there is no divergence and no merge commit, so the check ``exactly one merge commit'' fails. Run \code{setup\_hw6.sh --reset} and follow the order.
+  \item \code{Permission denied (publickey)} when pushing to GitHub: the key is not added to your account, or the remote uses the wrong address style. Test with \code{ssh -T git@github.com}; check \code{git remote -v}.
+  \item Creating the GitHub repository \emph{with} a README, then pushing: rejected, because GitHub has a commit you lack. Either create it empty (best) or run \code{git pull origin main --allow-unrelated-histories}, resolve any conflict, and push.
+  \item Using \code{git push --force} to ``fix'' a rejection: not allowed here, it erases others' work.
+\end{itemize}

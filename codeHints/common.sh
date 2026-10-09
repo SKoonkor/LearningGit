@@ -18,6 +18,9 @@ check() {
   fi
 }
 
+# skip "description"   -> an optional check that could not run (not counted as a failure)
+skip() { echo "SKIP  $1"; }
+
 # summary: print totals and exit non-zero if anything failed
 summary() {
   echo
