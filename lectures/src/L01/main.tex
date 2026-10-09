@@ -70,7 +70,7 @@ Command & What it does \\
 \code{ls} & List what is in the current directory. \code{ls -a} also shows \emph{hidden} files (names starting with a dot). \\
 \code{cd projects} & Change directory: go into the folder \code{projects}. \\
 \code{cd ..} & Go up one level (\code{..} means ``the parent folder''). \\
-\code{cd} or \code{cd \~{}} & Go back to your home folder (\code{\~{}} is shorthand for it). \\
+\code{cd} or \code{cd \textasciitilde} & Go back to your home folder (\code{\textasciitilde} is shorthand for it). \\
 \code{mkdir name} & Make a new folder. \\
 \code{echo "text" > file} & Write the text into a file. The symbol \code{>} sends a command's output into a file instead of the screen, creating the file or \emph{replacing} it; \code{>>} \emph{appends} instead. \\
 \code{cat file} & Print the contents of a file. \\
@@ -176,7 +176,7 @@ $ ls -a
 .    ..    .git    hello.txt
 \end{lstlisting}
 
-Nothing visible changed in your files, but a new hidden folder, \code{.git}, has appeared. (Output of \code{ls -a} also lists \code{.} and \code{..}: these mean ``this folder'' and ``the parent folder''.)
+Nothing visible changed in your files, but a new hidden folder, \code{.git}, has appeared. (Output of \mbox{\code{ls -a}} also lists \code{.} and \code{..}: these mean ``this folder'' and ``the parent folder''.)
 
 \begin{figure}[H]
 \centering
@@ -220,7 +220,7 @@ If your new repository does not start on \code{main} (for example you skipped Ho
 \end{quickfact}
 
 \begin{pitfall}
-\textbf{Run \code{git init} once per project, and only inside the project folder.} Never run it in your home folder or your Desktop: Git would try to track everything there. Also do not create a repository inside another repository; the inner one confuses the outer one. If you are unsure where you are, run \code{pwd} first. (In this course, your practice repositories live in the \code{practice/} folder of the course folder, which is itself a repository. That is why you must \code{git init} inside each practice folder, so that it becomes its own, separate repository.)
+\textbf{Run \code{git init} once per project, and only inside the project folder.} Never run it in your home folder or your Desktop: Git would try to track everything there. Also do not create a repository inside another repository; the inner one confuses the outer one. If you are unsure where you are, run \code{pwd} first. (In this course the course folder is itself a repository, and \code{practice/} lives inside it. That is why you must \code{git init} inside each practice folder, so that it becomes its own, separate repository.)
 \end{pitfall}
 
 \section{Asking Git what is going on: \texttt{git status}}
@@ -284,7 +284,7 @@ It only prepares the \code{practice/} folder and prints a reminder. \textbf{You 
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[1.1 Folder] Create a folder \code{hw1} inside \code{practice/} and go into it.
-\item[1.2 Repository] Turn \code{hw1} into a Git repository whose first branch is called \code{main}. (\emph{Warning:} \code{practice/} sits inside the course repository. If \code{git status} mentions paths such as \code{practice/hw1/}, you forgot \code{git init} in \code{hw1}.)
+\item[1.2 Repository] Turn \code{hw1} into a Git repository whose first branch is called \code{main}. (\emph{Warning:} \code{practice/} sits inside the course repository. If \code{git status} inside \code{hw1} does not say \code{No commits yet}, or shows a branch name other than \code{main}, you forgot \code{git init} in \code{hw1}.)
 \item[1.3 A file] Create a file \code{hello.txt} containing the single line \code{Hello Git}.
 \item[1.4 Local identity] Set a \emph{local} identity inside this repository only: name \code{Practice User} and email \code{practice@example.com}. Your global settings must stay as they were.
 \item[1.5 Status] Save the output of \code{git status} into a file called \code{status.txt} (hint: \code{git status > status.txt}).
