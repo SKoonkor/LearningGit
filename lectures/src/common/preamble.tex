@@ -1,0 +1,104 @@
+% Shared style for all Git & GitHub lectures (same look as the N-body course)
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+% keep '--' as two real hyphens in monospace text (commands like --version)
+\DisableLigatures[-]{family=tt*}
+\usepackage{booktabs,enumitem,graphicx,xcolor}
+\usepackage{array}
+\usepackage{needspace}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,decorations.pathreplacing,shapes.geometric,fit,backgrounds}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\setlength{\abovecaptionskip}{4pt}
+\usepackage[font=small,labelfont=bf]{caption}
+\setlist{itemsep=0.2em,topsep=0.3em}
+
+% ---------- colours ----------
+\definecolor{cbg}{HTML}{F6F8FA}
+\definecolor{ckw}{HTML}{0B5CAD}
+\definecolor{ccm}{HTML}{6A737D}
+\definecolor{cst}{HTML}{B5451B}
+\definecolor{cpart}{HTML}{1F6FB2}
+\definecolor{cheavy}{HTML}{C0392B}
+\definecolor{cgreen}{HTML}{2E8B57}
+
+% ---------- terminal listings ----------
+% In a terminal session, lines starting with "$" are what YOU type.
+% Everything else is what Git prints back.
+\lstdefinestyle{term}{
+  basicstyle=\ttfamily\small, backgroundcolor=\color{cbg},
+  frame=single, rulecolor=\color{black!15}, showstringspaces=false,
+  breaklines=true, columns=fullflexible, keepspaces=true,
+  aboveskip=0.6em, belowskip=0.6em, xleftmargin=4pt, xrightmargin=4pt,
+  literate={\$\ }{{\textcolor{cgreen}{\$\ }}}2,
+  upquote=true
+}
+\lstset{style=term}
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+% ---------- boxes ----------
+\newtcolorbox{history}{colback=yellow!8,colframe=orange!60!black,
+  title={History},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt}
+\newtcolorbox{quickfact}{colback=purple!4,colframe=purple!55!black,
+  title={Quick fact},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt}
+\newtcolorbox{keyidea}{colback=blue!4,colframe=blue!50!black,
+  title={Key idea},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt}
+\newtcolorbox{pitfall}{colback=red!4,colframe=red!55!black,
+  title={Pitfall},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt}
+\newtcolorbox{tryit}{colback=teal!5,colframe=teal!55!black,
+  title={Try it},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt,breakable}
+\newtcolorbox{homework}[1]{colback=green!4,colframe=green!40!black,
+  title={Homework #1},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt,
+  breakable}
+\newtcolorbox{goals}{colback=gray!6,colframe=gray!60!black,
+  title={Learning goals},fonttitle=\bfseries\small,left=4pt,right=4pt,top=2pt,bottom=2pt}
+
+% Solutions always start on a fresh page, behind a clear warning.
+\newcommand{\solutionspage}{%
+  \clearpage
+  \begin{tcolorbox}[colback=red!6,colframe=red!60!black,halign=center]
+    {\Large\bfseries Solutions}\\[0.3em]
+    {\small Stop here if you have not tried the homework yet.\\
+    Attempt every task first, run the checker, and only then read on.}
+  \end{tcolorbox}
+}
+
+% ---------- Git diagram styles (TikZ) ----------
+\tikzset{
+  commit/.style={circle,draw=black!70,fill=blue!10,minimum size=7mm,inner sep=0pt,font=\scriptsize\ttfamily},
+  newcommit/.style={commit,fill=orange!25,dashed},
+  tag/.style={draw,rounded corners=2pt,font=\scriptsize\ttfamily,inner sep=2pt},
+  branchtag/.style={tag,fill=green!15,draw=green!40!black},
+  headtag/.style={tag,fill=yellow!30,draw=orange!70!black},
+  remotetag/.style={tag,fill=purple!10,draw=purple!60!black},
+  area/.style={draw,rounded corners,minimum height=11mm,minimum width=33mm,align=center,font=\small},
+  cmdarrow/.style={->,thick,>=Stealth},
+  link/.style={->,thick,>=Stealth,black!70},
+}
+
+% ---------- header ----------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancyfoot[C]{\thepage}
+\newcommand{\lecturetitle}[3]{%
+  \fancyhead[L]{\small\textit{Git \& GitHub from Zero}}
+  \fancyhead[R]{\small Lecture #1}
+  \begin{center}
+    {\Large\bfseries Lecture #1}\\[0.4em]
+    {\LARGE\bfseries #2}\\[0.4em]
+    {\small #3}
+  \end{center}
+  \vspace{0.5em}
+}
