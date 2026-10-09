@@ -5,22 +5,20 @@
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 server="$root/practice/hw6_server.git"
 
-if [ -e "$server" ]; then
-  if [ "$1" = "--reset" ] && [ "$(basename "$server")" = "hw6_server.git" ] && [ "$(basename "$(dirname "$server")")" = "practice" ]; then
-    rm -rf "$server" "$root/practice/hw6" "$root/practice/hw6_answers.txt" "$root/practice/.hw6_ids"
-  else
-    echo "practice/hw6_server.git already exists. To start over run (from the course folder):"
-    echo "  bash codeHints/L06/setup_hw6.sh --reset"
-    exit 1
-  fi
+if [ -e "$server" ] && [ "$1" != "--reset" ]; then
+  echo "practice/hw6_server.git already exists. To start over run (from the course folder):"
+  echo "  bash codeHints/L06/setup_hw6.sh --reset"
+  exit 1
 fi
+# a fresh start (or --reset) always clears leftovers of an earlier attempt, even if the server folder was deleted by hand
+rm -rf "$server" "$root/practice/hw6" "$root/practice/hw6_answers.txt" "$root/practice/.hw6_ids"
 
 mkdir -p "$root/practice"
 git init -q --bare -b main "$server" || { echo "git init failed (need Git 2.28 or newer)"; exit 1; }
 
 # seed the server through a temporary working copy
 seed="$(mktemp -d "${TMPDIR:-/tmp}/hw6seed.XXXXXX")"
-trap 'rm -rf "$seed"' EXIT
+trap 'cd "$root"; rm -rf "$seed"' EXIT
 cd "$seed" || exit 1
 git init -q -b main
 git config user.name "Team Lead"

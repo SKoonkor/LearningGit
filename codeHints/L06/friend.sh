@@ -9,8 +9,20 @@ if git --git-dir="$server" cat-file -e main:friend.txt 2>/dev/null; then
   echo "Your friend has already pushed. Nothing to do."; exit 0
 fi
 
+# wrong-order warnings (the exercise needs: clone, local commit, NOT pushed, then this script)
+if [ ! -d "$root/practice/hw6/.git" ]; then
+  echo "Warning: practice/hw6 does not exist yet. Do tasks 6.1-6.3 first (clone and commit), then run this script."
+  echo "(To start over: bash codeHints/L06/setup_hw6.sh --reset)"
+  exit 1
+fi
+if git --git-dir="$server" cat-file -e main:mine.txt 2>/dev/null; then
+  echo "Warning: your commit 'Add my work' is already on the server, so no conflict will arise."
+  echo "Start over with: bash codeHints/L06/setup_hw6.sh --reset   and do not push before task 6.4."
+  exit 1
+fi
+
 work="$(mktemp -d "${TMPDIR:-/tmp}/hw6friend.XXXXXX")"
-trap 'rm -rf "$work"' EXIT
+trap 'cd "$root"; rm -rf "$work"' EXIT
 git clone -q "$server" "$work/friend" || exit 1
 cd "$work/friend" || exit 1
 git config user.name "Friend"

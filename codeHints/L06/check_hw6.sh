@@ -24,7 +24,7 @@ friend_loc()  { own_repo && g log --format=%s main | grep -qx 'Friend update'; }
 one_merge()   { own_repo && [ "$(g rev-list --merges --count main)" = "1" ]; }
 in_sync()     { own_repo && [ "$(g rev-parse main)" = "$(s rev-parse main)" ]; }
 feat_srv()    { own_repo && [ -n "$(s rev-parse --verify -q refs/heads/feature)" ] && [ "$(s rev-parse refs/heads/feature)" = "$(g rev-parse refs/heads/feature)" ]; }
-feat_msg()    { [ "$(s log -1 --format=%s refs/heads/feature)" = "Add feature file" ]; }
+feat_msg()    { [ "$(s log -1 --format=%s refs/heads/feature)" = "Add feature file" ] && s cat-file -e refs/heads/feature:feature.txt; }
 feat_track()  { own_repo && [ "$(g config branch.feature.remote)" = "origin" ] && [ "$(g config branch.feature.merge)" = "refs/heads/feature" ]; }
 clean()       { own_repo && [ -z "$(g status --porcelain | grep -v -e '\.DS_Store' -e 'Thumbs\.db')" ]; }
 a_remote()    { [ "$(ans remote)" = "origin" ]; }
@@ -44,7 +44,7 @@ else
   check "6.5 your main and the server's main are identical"          in_sync
   check "6.5 the original two commits are untouched"                 seed_kept
   check "6.6 branch 'feature' exists on the server, same commit as yours" feat_srv
-  check "6.6 the feature commit is 'Add feature file'"               feat_msg
+  check "6.6 the feature commit is 'Add feature file' and contains feature.txt" feat_msg
   check "6.6 feature tracks origin/feature (pushed with -u)"         feat_track
   check "6.7 answers: no-merge=fetch"                                a_fetch
   check "6.7 working directory clean"                                clean

@@ -225,16 +225,16 @@ $ git push -u origin feature
 branch 'feature' set up to track 'origin/feature'.
 $ git branch -vv
 * feature d74b2c7 [origin/feature] Add feature file
-  main    3bd108e [origin/main] Merge remote-tracking branch 'origin/main'
+  main    3bd108e [origin/main] Merge branch 'main' of github.com:friend/project
 $ git branch -r
   origin/HEAD -> origin/main
   origin/feature
   origin/main
 \end{lstlisting}
 
-\code{git branch -vv} shows which remote branch each local branch tracks; \code{git branch -r} lists the remote-tracking branches. To delete a branch on the remote once it is merged: \code{git push origin --delete feature}. (Your own \code{origin/feature} label disappears at the next \code{git fetch --prune}.)
+\code{git branch -vv} shows which remote branch each local branch tracks; \code{git branch -r} lists the remote-tracking branches. To delete a branch on the remote once it is merged: \code{git push origin --delete feature}. (Git removes your own \code{origin/feature} label at once. If someone else deletes a branch on GitHub, for example with the website's ``Delete branch'' button, \code{git fetch --prune} removes the stale label on your side.)
 
-\section{Setting up GitHub}
+\section{Setting up GitHub}\label{sec:github-setup}
 
 Do these once. They take about ten minutes. \textbf{Homework Part~A does not need them; they are needed for Part~B}, so you can also do Part~A first.
 
@@ -332,7 +332,11 @@ You already have a local repository. To share it:
 \end{enumerate}
 
 \begin{pitfall}
-That page offers two snippets, and the wrong one can do damage. The \emph{first} (``create a new repository on the command line'') starts with \code{echo "\# name" >> README.md} and \code{git init}. It is for a \emph{brand-new, empty folder}. Run inside an existing project, it appends a stray line to your README. You want the \emph{second} (``push an existing repository''), which has three lines. One of them, \code{git branch -M main}, \emph{renames the branch you are currently on} to \code{main}, so check with \code{git branch --show-current} that you are on the branch you mean.
+If you ticked ``Block command line pushes that expose my email'' (Section~\ref{sec:github-setup}) and your commits still carry your real address, the push is refused with \code{GH007: Your push would publish a private email address}. Set the no-reply address with \code{git config user.email} \emph{before} making the commits you push (without \code{--global} it applies to one repository only).
+\end{pitfall}
+
+\begin{pitfall}
+That page offers two snippets, and the wrong one can do damage. The \emph{first} (``create a new repository on the command line'') starts with \code{echo "\# name" >> README.md} and \code{git init}. It is for a \emph{brand-new, empty folder}. Run inside an existing project, it appends a stray line to your README. You want the \emph{second} (``push an existing repository''), which has three lines. One of them, \code{git branch -M main}, \emph{renames the branch you are currently on} to \code{main}, so check with \code{git branch --show-current} that you are on the branch you mean. (\code{-M} also \emph{overwrites} an existing branch of that name: run on \code{feature} while \code{main} exists, it replaces \code{main}.)
 \end{pitfall}
 
 The three commands, run inside your existing repository:
