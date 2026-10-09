@@ -157,6 +157,7 @@ $ git log --merges --oneline
 
 (The ID of any merge commit depends on the time you run the merge, so yours will differ from \code{52cdd3d}. The IDs of the branch commits are fixed.) The command \code{git log --merges} lists only merge commits.
 
+\Needspace{9\baselineskip}
 \textbf{One more merge before the conflict.} Merge \code{syrup} now (the next case needs it). It changes line~1 of \code{recipes.txt}, and nothing on \code{main} has touched that file, so Git applies the change on its own and makes a second merge commit:
 
 \begin{lstlisting}
@@ -221,13 +222,13 @@ Pancakes: flour, milk, eggs, vanilla
 \centering
 \begin{tikzpicture}[
   ln/.style={font=\small\ttfamily,anchor=west,inner sep=3pt,minimum height=6.5mm,text width=7.6cm},
-  note/.style={font=\scriptsize,anchor=west,text width=5.6cm}]
+  note/.style={font=\scriptsize,anchor=west,text width=6.0cm}]
   \node[ln,fill=black!10] (l1) at (0,0)    {<<<<<<< HEAD};
   \node[ln,fill=blue!10]  (l2) at (0,-0.65) {Pancakes: flour, milk, eggs, syrup};
   \node[ln,fill=black!10] (l3) at (0,-1.3)  {=======};
   \node[ln,fill=orange!15] (l4) at (0,-1.95) {Pancakes: flour, milk, eggs, vanilla};
   \node[ln,fill=black!10] (l5) at (0,-2.6)  {>>>>>>> vanilla};
-  \node[note] at (8.1,0)     {start marker; the part below is \textbf{your side}, from the branch you are on (\code{HEAD}, here \code{main})};
+  \node[note] at (8.1,0)     {start marker. Below it: \textbf{your side}, the branch you are on (\code{HEAD} = \code{main})};
   \node[note] at (8.1,-0.65) {your version of the line};
   \node[note] at (8.1,-1.3)  {divider between the two versions};
   \node[note] at (8.1,-1.95) {the \textbf{other side}, from the branch being merged};
