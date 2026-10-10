@@ -22,7 +22,7 @@
 
 \section{Git rarely loses what you committed}
 
-By now you have used several commands that sound dangerous: \code{amend}, \code{rebase}, \code{force-with-lease}, \code{reset}. The good news of this last lecture is that, once something is \emph{committed}, Git almost never really loses it. Commits that no branch points to any more stay in the repository for weeks. The skill is knowing how to find them. (Work that was \emph{never} committed is different: \code{git restore} and \code{reset --hard} destroy it for good, as you learned in Lecture 3.)
+By now you have used several commands that sound dangerous: \code{amend}, \code{rebase}, \code{force-with-lease}, \code{reset}. The good news of this last lecture is that, once something is \emph{committed}, Git almost never really loses it. Commits that no branch points to any more stay in the repository for weeks. The skill is knowing how to find them. (Work that was \emph{never} committed is different: \code{git restore} and \code{reset --hard} destroy it for good, as you learned for \code{restore} in Lecture 3.)
 
 We use a practice repository again, with no server this time. From the course folder:
 
@@ -78,7 +78,7 @@ $ git reflog
 ...
 \end{lstlisting}
 
-(The lines in between are the history of the demo setup. A long reflog opens in a pager: press \code{q} to leave it, as in Lecture 3.) Each line reads: \emph{the commit \code{HEAD} was on after this action}, \code{HEAD@\{n\}} (``\code{n} moves ago''), and what happened. So the line \code{6529ff1 HEAD@\{1\}: checkout \ldots} is the position just \emph{before} the reset, which is the state we want back. The numbers shift with every new action, so always look again instead of trusting a remembered number. Two ways to return:
+(In these lines \code{checkout} also covers \code{git switch}. The lines in between are the history of the demo setup. A long reflog opens in a pager: press \code{q} to leave it, as in Lecture 3.) Each line reads: \emph{the commit \code{HEAD} was on after this action}, \code{HEAD@\{n\}} (``\code{n} moves ago''), and what happened. So the line \code{6529ff1 HEAD@\{1\}: checkout \ldots} is the position just \emph{before} the reset, which is the state we want back. The numbers shift with every new action, so always look again instead of trusting a remembered number. Two ways to return:
 
 \begin{lstlisting}
 $ git reset --hard HEAD@{1}               # move main back to where it was
@@ -144,7 +144,7 @@ $ git reset --hard 6529ff1  # bring the waffle commit back for the next examples
 (\code{--mixed} also prints \code{Unstaged changes after reset:} before the status. After \code{--hard} the file has one line fewer; the commit itself is still in the reflog, which is why the last line works.)
 
 \begin{pitfall}
-\textbf{\code{--hard} discards uncommitted work permanently.} Committed work it only moves out of sight (the reflog has it); \emph{uncommitted} changes are gone for good. Before you use it, run \code{git status} and \code{git diff}. And never reset commits that you have already pushed and shared: that rewrites history under your teammates' feet (the golden rule of Lecture 8). For shared mistakes use \code{git revert} (Lecture 3).
+\textbf{\code{--hard} discards uncommitted work permanently.} Committed work it only moves out of sight (the reflog has it); \emph{uncommitted} changes are gone for good. Before you use it, run \code{git status} and \code{git diff}. And never reset commits that you have already pushed and shared: that rewrites history under your teammates' feet (the golden rule of Lecture 8). For shared mistakes use \code{git revert} (Lecture 3; for a merge commit add \code{-m 1}, see Lecture 5).
 \end{pitfall}
 
 \subsection{Three recipes}

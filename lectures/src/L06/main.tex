@@ -245,7 +245,7 @@ Do these once. They take about ten minutes. \textbf{Homework Part~A does not nee
 
 Create a free account at \url{https://github.com} and turn on two-factor authentication (Settings, ``Password and authentication''). Choose your user name carefully: it appears in every repository address.
 
-In Lecture 1 you put your email address into \code{git config}, and in Lecture 5 you saw that every commit carries it. Commits pushed to GitHub show that address \emph{publicly}. GitHub offers a private ``no-reply'' address that works instead:
+In Lecture 1 you put your email address into \code{git config}, and in Lecture 3 you saw that every commit carries it. Commits pushed to GitHub show that address \emph{publicly}. GitHub offers a private ``no-reply'' address that works instead:
 
 \begin{enumerate}
   \item In GitHub \textbf{Settings $\rightarrow$ Emails}, tick \emph{Keep my email addresses private}. The option below it, \emph{Block command line pushes that expose my email}, rejects any push containing a commit with your real address, \emph{including old ones}. Your commits from Lectures 1--5 have it, so leave that second option unticked for now, or use a brand-new repository for Part~B (as the homework does).
@@ -383,7 +383,7 @@ Do the tasks in this order, and \emph{do not push before 6.4}. To start over (al
 
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[6.1 Clone] Clone the server into a folder called \code{hw6} (\code{git clone hw6\_server.git hw6}) and go into it.
-\item[6.2 Look around] Run \code{git remote -v}, \code{git branch -a}\allowbreak\ and \code{git log --oneline --decorate}. In \code{practice/hw6\_answers.txt} (next to the \code{hw6} folder; create it with \code{printf} or \code{echo} in Git Bash, not with a PowerShell redirect) write the line \code{remote=<the name of the remote>}.
+\item[6.2 Look around] Run \code{git remote -v}, \code{git branch -a} (all branches, including the remote-tracking ones)\allowbreak\ and \code{git log --oneline --decorate}. In \code{practice/hw6\_answers.txt} (next to the \code{hw6} folder; create it with \code{printf} or \code{echo} in Git Bash, not with a PowerShell redirect) write the line \code{remote=<the name of the remote>}.
 \item[6.3 Commit locally] Create \code{mine.txt} containing \code{my work} and commit it as \code{Add my work}. \emph{Do not push yet, and do not run \code{friend.sh} yet.} Run \code{git status} and add the line \code{ahead=<number of commits ahead>} to the answers file.
 \item[6.4 Your friend pushes] Go back to the \emph{course folder} (\code{cd ../..}) and run \code{bash codeHints/L06/friend.sh}. Then \code{cd practice/hw6} again and try \code{git push} and read the rejection. Set \code{git config pull.rebase false}, then run \code{git pull --no-edit}. Check \code{git log --oneline --graph}: there is now one merge commit.
 \item[6.5 Push] Run \code{git push}. Your \code{main} and the server's \code{main} must now be identical.

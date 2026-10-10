@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Setup for Homework 2. Run from the course folder:  bash codeHints/L02/setup_hw2.sh
-# Creates practice/hw2: a repository with six untracked files and NO commits.
+# Creates practice/hw2: a repository with five untracked files, one folder, and NO commits.
 # Use  --reset  to delete an existing practice/hw2 and start again.
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 hw="$root/practice/hw2"

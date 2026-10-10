@@ -213,7 +213,7 @@ HEAD    config    description    hooks    info    objects    refs
 $ cat .git/HEAD
 ref: refs/heads/main
 \end{lstlisting}
-(You may see a few more entries; it depends on your Git.) You do not need to understand these yet. Lecture 10 opens this folder properly. For now notice two things: \code{config} is the file for the \emph{local} settings of Figure~\ref{fig:scopes}, and \code{HEAD} says which branch you are on (here \code{main}, the name you set in Homework 0).
+(You may see a few more entries; it depends on your Git.) You do not need to understand these yet. Lecture 10 opens this folder properly. For now notice two things: \code{config} is the file for the \emph{local} settings of Figure~\ref{fig:scopes}, and \code{HEAD} names the branch you are on (here \code{main}, the name you set in Homework 0; Lectures 3 and 4 explain \code{HEAD}).
 
 \begin{quickfact}
 If your new repository does not start on \code{main} (for example you skipped Homework 0.3), create it with \code{git init -b main}, or rename the branch afterwards with \code{git branch -m main}. Check the current branch name any time with \code{git status}.

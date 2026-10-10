@@ -325,7 +325,7 @@ To github.com:you/recipes.git
 \Needspace{9\baselineskip}
 \begin{lstlisting}
 $ git switch sale
-$ git commit --amend -m "Add sale banner (reworded)"
+$ git commit --amend -m "Add sale banner (reworded)"   # fine here: a practice branch
 $ bash codeHints/L08/friend8.sh sale          # a friend pushes (course folder)
 $ git push --force-with-lease
 To github.com:you/recipes.git
@@ -440,7 +440,7 @@ You are the only person working on \code{feature}, so rewriting it is allowed. R
 \begin{description}[leftmargin=1.2em,style=nextline]
 \item[8.1 Look] Clone the server into \code{hw8}, go in, and run \code{git log --oneline --graph --all --decorate}.
 \item[8.2 Tidy and rebase] On \code{feature} run \code{git rebase -i main}. Turn the five commits into \emph{two}: fold the \code{wip} and \code{fix typo} commits into \code{Add greeting}, fold \code{oops} into \code{add farewell}, and \emph{reword} \code{add farewell} to \code{Add farewell}. The first commit conflicts in \code{README.md}: keep \emph{both} added lines (\code{Maintained by the team.} and \code{Usage: run the greeter.}), remove the markers, \code{git add README.md}, and \code{git rebase --continue}. An editor opens \emph{twice} during this task (first for the conflicted commit's message, later for the reword): in both, save and close, and change the text only for the reword.
-\item[8.3 Check] \code{git log --oneline --reverse main..feature} must show exactly two commits, \code{Add greeting} and then \code{Add farewell}, on top of \code{main}'s newest commit.
+\item[8.3 Check] \code{git log --oneline --reverse main..feature} (\code{--reverse}: oldest first; \code{main..feature}: the commits on \code{feature} that \code{main} lacks) must show exactly two commits, \code{Add greeting} and then \code{Add farewell}, on top of \code{main}'s newest commit.
 \item[8.4 Publish] Try a plain \code{git push} and read the rejection. Then push with \code{git push --force-with-lease}.
 \item[8.5 Cherry-pick] Switch to \code{main}. Find the commit on \code{origin/hotfix} (\code{git log origin/hotfix}) and copy it onto \code{main} with \code{git cherry-pick}. Push \code{main}. (\code{main} must stay a straight line: no merge.)
 \item[8.6 Questions] In \code{practice/hw8\_answers.txt} (next to \code{hw8}, created with \code{printf} or \code{echo}) write three lines: \code{shared-rebase=<yes or no>} (is it fine to rebase commits your teammates have already pulled?), \code{safer-force=<option>} (the safer alternative to \code{--force}), and \code{new-ids=<merge or rebase>} (which of the two creates copies of your commits with new IDs?).

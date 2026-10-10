@@ -18,7 +18,7 @@ A beginner-friendly lecture course on Git and GitHub, from "what is version cont
 | 9 | `L09_github_features.pdf` | use Issues, Actions (CI), branch protection, tags and releases |
 | 10 | `L10_recovery_internals.pdf` | recover lost work (reflog), `reset`, `stash`, `bisect`, and see what is inside `.git` |
 
-Parts: **A** (lectures 1-5) is Git on your own computer; **B** (6-7) is sharing and teamwork on GitHub; **C** (8-10) is advanced tools and recovery.
+Stages: **1** (lectures 1-5) is Git on your own computer; **2** (6-7) is sharing and teamwork on GitHub; **3** (8-10) is advanced tools and recovery. (Do not confuse these stages with "Part A / Part B" inside some homework: there, Part A works offline and Part B, optional, uses your real GitHub account.)
 
 ## Layout
 
@@ -42,19 +42,20 @@ Parts: **A** (lectures 1-5) is Git on your own computer; **B** (6-7) is sharing 
    bash codeHints/L02/check_hw2.sh
    ```
 
-4. When everything says PASS, compare with the solutions (end of the lecture, or `solutions/Lxx/solutions.pdf`).
+4. When everything says PASS (a `SKIP` line just means an optional check could not run), compare with the solutions (end of the lecture, or `solutions/Lxx/solutions.pdf`).
 
-Every setup script can be rerun with `--reset` to start the exercise again. Never delete the course folder's own `.git`.
+Every setup script that builds a repository can be rerun with `--reset` to start the exercise again. Some lectures also have a follow-along script (`setup_demoN.sh`) and, from Lecture 6, a "friend" script that plays a teammate. Never delete the course folder's own `.git`.
 
 ## What you need
 
 - **Git 2.28 or newer** and **bash** (on Windows use *Git Bash*, which comes with Git for Windows; macOS and Linux already have bash).
-- A free **GitHub account** and an **SSH key** from Lecture 6 on. Homework parts that really use GitHub (Lectures 6, 7, 9) are marked *optional* and are checked through GitHub's public interface; the offline parts need no internet.
+- A free **GitHub account** and an **SSH key** from Lecture 6 on. Homework parts that really use GitHub (Lectures 6, 7, 9) are marked *optional*. Lectures 7 and 9 are checked through GitHub's public interface (your repositories must be public); Lecture 6 asks Git itself, using your SSH login. A check that cannot run (no network) prints `SKIP`; the offline parts need no internet.
 - Lecture 7's Part B needs a **friend** (two GitHub accounts) for the pull-request exercises.
-- To rebuild a PDF you need a LaTeX installation with `latexmk`:
+- To rebuild a PDF you need a LaTeX installation with `latexmk`. A lecture is built in its source folder, and the PDFs in `lectures/` and `solutions/` are copies of the results:
 
   ```
-  cd lectures/src/L04 && latexmk -pdf main.tex
+  cd lectures/src/L04 && latexmk -pdf main.tex        # then copy main.pdf to lectures/L04_branches.pdf
+  cd solutions/L04   && latexmk -pdf solutions.tex
   ```
 
 ## Working through it with friends
@@ -63,4 +64,4 @@ The exercises are designed so that you can do them together: compare answers aft
 
 ## A note on the repository's own history
 
-This repository was built lecture by lecture. Each lecture lives on its own branch (`lecture/L00-roadmap`, `lecture/L01-first-steps`, ...), stacked on the previous one, which is a good chance to practise pull requests and merging in the right order.
+This repository was built lecture by lecture. Each lecture was developed on its own branch (`lecture/L00-roadmap`, `lecture/L01-first-steps`, ...), stacked on the previous one; the finished course is the last branch, and merging them in order (pull request by pull request) is a good chance to practise Lectures 5 to 7.

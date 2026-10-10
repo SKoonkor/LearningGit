@@ -310,7 +310,7 @@ Git conflicts not only when two people change the \emph{same} line, but also whe
 \end{quickfact}
 
 \begin{quickfact}
-\textbf{The other direction.} You can also merge \code{main} \emph{into} a feature branch, to bring it up to date: \code{git switch feature}, then \code{git merge main}. The feature branch is the receiver and \code{main} is unchanged. If you merge in the wrong direction by mistake, do not panic: a finished merge can be undone with \code{git revert -m 1 <merge-commit>} (Lecture 10 shows more ways).
+\textbf{The other direction.} You can also merge \code{main} \emph{into} a feature branch, to bring it up to date: \code{git switch feature}, then \code{git merge main}. The feature branch is the receiver and \code{main} is unchanged. If you merge in the wrong direction by mistake, do not panic: a finished merge can be undone with \code{git revert -m 1 <merge-commit>}. (A merge commit has two parents, so Git needs to know which one to keep: \code{-m 1} means the first parent, the branch you were on. For a merge you have \emph{not} pushed, Lecture 10 shows \code{ORIG\_HEAD}.)
 \end{quickfact}
 
 \section{Cleaning up}

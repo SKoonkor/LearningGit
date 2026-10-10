@@ -288,7 +288,7 @@ If you are sure you want to delete it, run 'git branch -D waffles'.
 The first deletion worked because \code{trial} points at a commit that is already part of the branch you are on (\code{main}), so nothing would be lost. \code{waffles} has a commit that exists nowhere else, so Git says it is ``not fully merged'' (``merged'' means: its commits are already reachable from your current branch; Lecture 5 shows how to merge) and refuses.
 
 \begin{pitfall}
-Deleting a branch deletes only the label, never the files in your folder. But commits that only that branch led to would have no label leading to them any more. That is why \code{-d} refuses to delete a branch with work that exists nowhere else, as above. \code{git branch -D} forces the deletion. Do not use \code{-D} until you understand why (Lecture 10 shows how such commits can still be rescued for a while). For now, if Git refuses, believe it. (The exact wording of the error varies a little between Git versions.)
+Deleting a branch deletes only the label, never the files in your folder. But commits that only that branch led to would have no label leading to them any more. That is why \code{-d} refuses to delete a branch with work that exists nowhere else, as above. \code{git branch -D} forces the deletion. Do not use \code{-D} until you understand why (Lecture 7 shows the one common safe exception; Lecture 10 shows how such commits can still be rescued for a while). For now, if Git refuses, believe it. (The exact wording of the error varies a little between Git versions.)
 \end{pitfall}
 
 The usual life cycle is: create, work, merge (Lecture 5), delete with \code{-d}.

@@ -39,7 +39,7 @@ Version control is a time machine plus a collaboration tool for your files. It i
 \end{keyidea}
 
 \begin{quickfact}
-\textbf{Words you will meet soon} (each is explained properly in Lectures 1--5). A \emph{repository} is a project folder together with its saved history. A \emph{commit} is one saved version. A \emph{branch} is a separate line of work. A \emph{remote} is a copy of the repository stored somewhere else, such as GitHub. Do not worry if these feel vague now.
+\textbf{Words you will meet soon} (each is explained properly later: \emph{remote} in Lecture 6, the others in Lectures 1--5). A \emph{repository} is a project folder together with its saved history. A \emph{commit} is one saved version. A \emph{branch} is a separate line of work. A \emph{remote} is a copy of the repository stored somewhere else, such as GitHub. Do not worry if these feel vague now.
 \end{quickfact}
 
 \section{Three generations of version control}
@@ -149,8 +149,8 @@ The order below rises in difficulty. \textbf{Each lecture reuses what you learne
   \draw[link] (l1)--(l2); \draw[link] (l2)--(l3); \draw[link] (l3)--(l4); \draw[link] (l4)--(l5);
   \draw[link,rounded corners] (l5.south) -- ++(0,-0.6) -| (l6.north);
   \draw[link] (l6)--(l7); \draw[link] (l7)--(l8); \draw[link] (l8)--(l9); \draw[link] (l9)--(l10);
-  \node[font=\small\bfseries,text=blue!50!black,anchor=west] at (-1.3,1.1) {Part A: Git on your own computer (L1--L5)};
-  \node[font=\small\bfseries,text=orange!60!black,anchor=west] at (-1.3,-4.0) {Parts B and C: sharing with GitHub (L6--L7), then advanced tools (L8--L10)};
+  \node[font=\small\bfseries,text=blue!50!black,anchor=west] at (-1.3,1.1) {Stage 1: Git on your own computer (L1--L5)};
+  \node[font=\small\bfseries,text=orange!60!black,anchor=west] at (-1.3,-4.0) {Stage 2: sharing with GitHub (L6--L7). Stage 3: advanced tools (L8--L10)};
 \end{tikzpicture}
 \caption{Course map. Blue (L1--5): Git on one computer. Orange (L6--7): sharing and teamwork. Green (L8--10): advanced tools. Follow the arrows.}
 \end{figure}
@@ -168,9 +168,9 @@ The order below rises in difficulty. \textbf{Each lecture reuses what you learne
 5 & Merging \& conflicts & Combine branches; resolve a conflict calmly \\
 6 & Remotes \& GitHub & Put your project on GitHub; \code{clone}, \code{push}, \code{pull} \\
 7 & Pull requests \& reviews & Contribute to a friend's project; review each other's work \\
-8 & Rebase & Tidy up commit history; know when \emph{not} to \\
-9 & GitHub features & Issues, automated checks (Actions), releases, web pages \\
-10 & Recovery \& internals & Rescue ``lost'' work; see what is inside \code{.git} \\
+8 & Rebase \& cherry-pick & Tidy up history; cherry-pick; push rewritten history safely \\
+9 & GitHub features & Issues, Actions (automated checks), branch protection, releases \\
+10 & Recovery \& internals & Rescue lost work (reflog, \code{reset}, \code{stash}, \code{bisect}); look inside \code{.git} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -186,13 +186,14 @@ Type every command yourself. Reading about Git is not enough: your hands need to
 \end{keyidea}
 
 \Needspace{8\baselineskip}
-Each lecture ends with a \textbf{Homework} box with tasks. You will do the work in the terminal. Each lecture comes with three helpers:
+Each lecture ends with a \textbf{Homework} box with tasks. You will do the work in the terminal. Most lectures come with three helpers:
 
 \begin{enumerate}
   \item \textbf{A setup script}, \code{codeHints/Lxx/setup\_hwX.sh}, which builds a practice repository in the \code{practice/} folder, already in the starting state for the tasks.
-  \item \textbf{A checker}, \code{codeHints/Lxx/check\_hwX.sh}, which looks at your repository and prints \code{PASS} or \code{FAIL} for each task.
+  \item \textbf{A checker}, \code{codeHints/Lxx/check\_hwX.sh}, which looks at your repository and prints \code{PASS} or \code{FAIL} for each task (\code{SKIP} for an optional check that could not run).
   \item \textbf{Solutions}, in two places: at the end of every lecture PDF, always starting on a new page, and as a separate PDF in \code{solutions/Lxx/}.
 \end{enumerate}
+Some lectures also have a follow-along repository (\code{setup\_demoN.sh}) and, from Lecture 6, a ``friend'' script that plays a teammate.
 
 Here \code{Lxx} stands for a lecture folder such as \code{L02}, and \code{hwX} for its homework number. The course folder looks like this:
 \begin{lstlisting}
@@ -208,9 +209,10 @@ Always start in the course folder \code{LearningGit/}. (\code{cd} means ``change
 \begin{lstlisting}
 $ bash codeHints/L02/setup_hw2.sh     # build the practice repository
 $ cd practice/hw2                     # go into it and do the tasks
-$ bash ../../codeHints/L02/check_hw2.sh
-PASS  2.1 first commit exists
-FAIL  2.2 file notes.txt is committed
+$ cd ../..                            # back to the course folder
+$ bash codeHints/L02/check_hw2.sh
+PASS  setup: practice/hw2 is its own repository
+FAIL  2.1/2.2/2.3 exactly three commits
 \end{lstlisting}
 
 If a check says \code{FAIL}, fix your repository and run the checker again.
@@ -251,14 +253,8 @@ $ git config --global init.defaultBranch main
 \section{Summary}
 
 \begin{itemize}
-  \item Version control records a project's history so you can compare, go back and collaborate. Git (Torvalds, 2005) is distributed: every copy holds the full history.
-  \item Git is the tool on your computer; GitHub is a website that hosts Git projects.
-  \item The course goes from Git on your own computer (L1--5) to sharing (L6--7) to advanced tools (L8--10).
-\end{itemize}
-
-\section*{Further reading}
-\begin{itemize}
-  \item S.\ Chacon \& B.\ Straub, \emph{Pro Git}, free at \url{https://git-scm.com/book}: Chapter 1, ``Getting Started''. Also \url{https://docs.github.com}.
+  \item Version control records a project's history so you can compare, go back and collaborate. Git (Torvalds, 2005) is distributed: every copy holds the full history. Git is the tool on your computer; GitHub is a website that hosts Git projects.
+  \item The course goes from Git on your own computer (L1--5) to sharing (L6--7) to advanced tools (L8--10). Further reading: \emph{Pro Git}, free at \url{https://git-scm.com/book}, Chapter 1.
 \end{itemize}
 
 \solutionspage
