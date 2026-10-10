@@ -30,9 +30,9 @@ In Lectures 6--8 you used GitHub as a place to store a repository and to host pu
   \node[feat] (rel) at (-5.2,-1.9) {\textbf{Releases}\\\scriptsize named versions};
   \node[feat] (pro) at (0,-2.6) {\textbf{Branch protection}\\\scriptsize rules for \code{main}};
   \node[feat] (pag) at (5.2,-1.9) {\textbf{Pages}\\\scriptsize a free website};
-  \foreach \n in {iss,prs,act,rel,pro,pag} { \draw[link,<->] (git)--(\n); }
+  \foreach \n in {iss,prs,act,rel,pro,pag} { \draw[black!50,thick] (git)--(\n); }
 \end{tikzpicture}
-\caption{The Git repository at the centre, GitHub's features around it. This lecture covers all of the orange boxes except pull requests (Lecture 7).}
+\caption{GitHub's features are built around your Git repository. This lecture covers all of the orange boxes except pull requests (Lecture 7).}
 \label{fig:features}
 \end{figure}
 
@@ -64,7 +64,7 @@ Fix greeting typo
 Closes #12
 \end{lstlisting}
 
-The keywords are \emph{close(s/d)}, \emph{fix(es/ed)} and \emph{resolve(s/d)}, in any capitalisation. The issue is closed \textbf{when the change is merged into the default branch} (usually \code{main}), not when the pull request is opened. Before that, the issue page shows the pull request as linked.
+The keywords are \emph{close(s/d)}, \emph{fix(es/ed)} and \emph{resolve(s/d)}, in any capitalisation. The issue is closed \textbf{when the change is merged into the default branch} (usually \code{main}; the pull request must target it), not when the pull request is opened. Before that, the issue page shows the pull request as linked.
 
 \begin{figure}[H]
 \centering
@@ -117,15 +117,24 @@ and a pull-request template is plain Markdown, for example:
 
 These files are ordinary files: you commit and push them like any other, and they take effect on the default branch.
 
-\begin{quickfact}
-GitHub also offers \emph{Projects}: a board with columns (to do, doing, done) whose cards are issues and pull requests. It is optional; many small teams get by with labels.
-\end{quickfact}
-
 \section{GitHub Actions: letting a robot run your tests}
 
 \textbf{Continuous integration} (CI) means: every time someone pushes, a machine automatically builds and tests the project, and reports the result next to the commit. Nobody forgets to run the tests, and a broken change is caught before it is merged. On GitHub this is done by \textbf{Actions}.
 
-You describe what to run in a \textbf{workflow file}: a text file in the folder \code{.github/workflows/}, written in \textbf{YAML}. YAML is a simple format of \code{key: value} pairs where \emph{indentation} (spaces, never tabs) shows nesting. Our project has a test script \code{test.sh}; this workflow runs it:
+You describe what to run in a \textbf{workflow file}: a text file in the folder \code{.github/workflows/}, written in \textbf{YAML}. Four rules are enough to read it:
+
+\begin{lstlisting}
+fruit: apple          # key: value  (# starts a comment)
+box:                  # a key whose value is the indented lines below it
+  size: large         #   (indent with spaces, never tabs)
+  items:
+    - pen             # a list: one item per line, each starting with "- "
+    - cup
+  tags: [a, b]        # the same kind of list, written on one line
+empty:                # a key with nothing after it: "all", "default" or "yes"
+\end{lstlisting}
+
+Our project has a test script \code{test.sh}: it runs \code{greet.sh}, compares the output with \code{Hello, world}, and ends with \code{exit 1} (the signal for ``failure'') if they differ. This workflow runs it on GitHub:
 
 \begin{lstlisting}
 name: CI
@@ -150,13 +159,15 @@ Line by line:
 \toprule
 Line & Meaning \\
 \midrule
-\code{name: CI} & The name shown in the Actions tab. \\
-\code{on:} & \emph{When} to run: on every push to \code{main}, and on every pull request. \\
+\code{name: CI} & The workflow's name, shown in the Actions tab. (The \code{name:} inside a step names that step.) \\
+\code{on:} & \emph{When} to run (the events): \\
+\code{\ \ push: branches: [main]} & \ldots whenever someone pushes to \code{main}, \\
+\code{\ \ pull\_request:} & \ldots and for every pull request (the empty value means ``all of them''). \\
 \code{jobs:} / \code{test:} & A job called \code{test}. A workflow can have several; they run in parallel. \\
-\code{runs-on: ubuntu-latest} & The kind of computer GitHub lends you: a fresh virtual machine with Linux. \\
+\code{runs-on: ubuntu-latest} & The kind of computer GitHub lends you: a \emph{virtual machine}, a computer simulated inside GitHub's servers, created fresh for each run and thrown away afterwards, with Linux installed. \\
 \code{steps:} & The job's steps, run in order. A line starting with \code{-} begins a step. \\
-\code{uses: actions/checkout@v4} & Use a ready-made \emph{action}: it downloads your repository into the machine. (Without it the machine has no files.) \\
-\code{run: bash test.sh} & Run a command, exactly as in your terminal. If it fails (non-zero exit), the job fails. \\
+\code{uses: actions/checkout@v4} & Use a ready-made, reusable step called an \emph{action} (here: the repository \code{checkout} of the organisation \code{actions}). It downloads your repository into the machine; \emph{without it the machine has no files}. \\
+\code{run: bash test.sh} & Run a command, exactly as in your terminal. If the command reports failure (like \code{test.sh} with its \code{exit 1}), the step and the job fail. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -168,7 +179,7 @@ Line & Meaning \\
   \node[box,fill=blue!8,minimum width=3.0cm,minimum height=1.6cm] (ev) at (0,0) {\textbf{Event}\\\scriptsize you push, or open\\\scriptsize a pull request};
   \node[box,fill=orange!12,minimum width=10.6cm,minimum height=2.6cm] (wf) at (8.0,0) {};
   \node[font=\small\bfseries,anchor=north west] at (2.8,1.25) {Workflow \code{CI}: job \code{test} on a fresh Ubuntu machine};
-  \node[box,fill=white] (s1) at (4.6,-0.25) {1.\ checkout\\\scriptsize \code{uses}};
+  \node[box,fill=white] (s1) at (4.6,-0.25) {1.\ checkout\\\scriptsize get the files};
   \node[box,fill=white] (s2) at (8.0,-0.25) {2.\ run the tests\\\scriptsize \code{run: bash test.sh}};
   \node[box,fill=green!15,minimum width=2.4cm] (res) at (12.2,-0.25) {\textbf{green} tick\\or \textbf{red} cross};
   \draw[link] (ev)--(wf.west); \draw[link] (s1)--(s2); \draw[link] (s2)--(res);
@@ -177,14 +188,14 @@ Line & Meaning \\
 \label{fig:actions}
 \end{figure}
 
-\textbf{Using it.} Commit the file \code{.github/workflows/ci.yml} and push. Open the \textbf{Actions} tab of your repository: the run appears, yellow while it works, then a green tick or a red cross. Click it to read the log of every step. On a pull request the same result is shown as a \emph{check} next to the merge button. If a step fails, read its log, fix the problem, and push again: the workflow runs again.
+\textbf{Using it.} Commit the file \code{.github/workflows/ci.yml} and push. Open the \textbf{Actions} tab of your repository: the run appears, yellow while it works, then a green tick or a red cross. Click it to read the log of every step. On a pull request the same result is shown next to the merge button as a \emph{check}. (A \textbf{status check} is this pass/fail result that a workflow reports on a commit or pull request.) If a step fails, read its log, fix the problem, and push again: the workflow runs again.
 
 \begin{pitfall}
 \textbf{YAML is picky.} Use spaces, never tabs. Keep the indentation exactly as shown: a step moved by one space changes its meaning. A broken file does not run at all; the Actions tab then shows an error with the line number.
 \end{pitfall}
 
 \begin{quickfact}
-Actions are free for public repositories; private repositories get a limited monthly allowance of free minutes. The version after \code{@} (\code{v4}) pins the action's major version; newer major versions appear over time, and GitHub's documentation lists the current one. Never write passwords into a workflow file; secrets go under Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions and are used as \code{\$\{\{ secrets.NAME \}\}}.
+Actions are free for public repositories; private repositories get a limited monthly allowance of free minutes. The version after \code{@} pins the action's major version. \code{v4} is just an example: newer major versions appear over time, and GitHub's documentation lists the current one (use it in your own projects). Never write passwords into a workflow file; secrets go under Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions and are used as \code{\$\{\{ secrets.NAME \}\}}.
 \end{quickfact}
 
 \section{Branch protection: guarding \texttt{main}}
@@ -206,7 +217,7 @@ Restrict deletions & The branch cannot be deleted. \\
 \end{tabular}
 \end{center}
 
-Together they give the team's central rule: \emph{nothing reaches \code{main} unless it was reviewed and the tests pass}. (Branch protection is available for public repositories on every plan; for private repositories it depends on your plan.)
+(You cannot approve your own pull request, so ``Require approvals'' on a one-person repository would lock you out; leave it off when you practise alone.) Together they give the team's central rule: \emph{nothing reaches \code{main} unless it was reviewed and the tests pass}. (Branch protection is available for public repositories on every plan; for private repositories it depends on your plan.)
 
 \section{Tags and releases: naming a version}
 
@@ -237,6 +248,7 @@ v1.0.0          First release
 $ git show v1.0.0
 tag v1.0.0
 Tagger: Practice User <practice@example.com>
+Date:   (the day you made the tag)
 
 First release
 
@@ -252,16 +264,7 @@ $ git push origin v0.1.0 v1.0.0        # or: git push origin --tags   (all tags)
  * [new tag]         v1.0.0 -> v1.0.0
 \end{lstlisting}
 
-Other tag commands: \code{git tag -d v1.0.0} deletes a local tag, \code{git push origin --delete v1.0.0} deletes it on the remote, and \code{git describe} tells you how far the current commit is from the nearest tag:
-
-\begin{lstlisting}
-$ git describe --tags
-v1.0.0-1-g00585aa           # one commit after v1.0.0
-$ git switch --detach v0.1.0
-HEAD is now at 3ff4272 Add README
-\end{lstlisting}
-
-Checking out a tag puts you on a detached \code{HEAD}, exactly as in Lecture 4: good for looking at the old version, not for committing.
+Two more commands you may meet: \code{git tag -d v1.0.0} deletes a local tag, and \code{git describe --tags} tells you how far the current commit is from the nearest tag (for example \code{v1.0.0-1-g00585aa}: one commit after \code{v1.0.0}). Checking out a tag gives a detached \code{HEAD} (Lecture 4): fine for looking, not for committing.
 
 \subsection{Version numbers}
 
@@ -280,22 +283,14 @@ a change that breaks how people use it & MAJOR & \code{2.0.0} \\
 \end{tabular}
 \end{center}
 
-A \textbf{release} is GitHub's page for a tag. Under \textbf{Releases $\rightarrow$ Draft a new release} you choose a tag, write a title and notes (the button \emph{Generate release notes} lists the merged pull requests for you), optionally attach files, and press \emph{Publish release}. GitHub automatically adds downloadable ZIP and tar archives of the source code at that tag.
+(When a higher number goes up, the lower ones reset to 0: after \code{1.1.5} a breaking change gives \code{2.0.0}. Versions \code{0.x.y} mean ``still unstable''.) A \textbf{release} is GitHub's page for a tag. Under \textbf{Releases $\rightarrow$ Draft a new release} you choose a tag, write a title and notes (the button \emph{Generate release notes} lists the merged pull requests for you), optionally attach files, and press \emph{Publish release}. GitHub automatically adds downloadable ZIP and tar archives of the source code at that tag.
 
-\section{GitHub Pages and a healthy repository}
+\section{Also worth knowing}
 
-\textbf{GitHub Pages} publishes files from your repository as a website, for free. In \textbf{Settings $\rightarrow$ Pages} choose to deploy from a branch (for example \code{main}, folder \code{/} or \code{/docs}). After a minute the site is at \code{https://YOURNAME.github.io/REPOSITORY/}. A single \code{index.html} (or \code{index.md}) is enough. It is a good place for project documentation or a personal page.
-
-A repository that others can use usually contains:
-
-\begin{itemize}
-  \item \code{README.md}: what it is and how to use it (shown on the front page);
-  \item \code{LICENSE}: what others may do with the code (GitHub's \emph{Add file} menu offers common licences; without one, the default is ``all rights reserved'');
-  \item \code{.gitignore} (Lecture 2) and, for teamwork, \code{CONTRIBUTING.md} (how to propose changes) and the \code{.github} templates from above.
-\end{itemize}
+\textbf{GitHub Pages} publishes files from your repository as a free website (Settings $\rightarrow$ Pages, deploy from a branch such as \code{main}; the site appears at \code{https://YOURNAME.github.io/REPOSITORY/}). A repository others can use usually has a \code{README.md}, a \code{LICENSE} (without one, the default is ``all rights reserved''), the \code{.gitignore} of Lecture 2, and for teamwork a \code{CONTRIBUTING.md}.
 
 \begin{pitfall}
-\textbf{Security basics.} Turn on two-factor authentication (Lecture 6). Never commit passwords, keys or tokens (Lecture 2): GitHub scans for known secrets, but history keeps them. GitHub's \emph{Dependabot} can warn you about vulnerable libraries in a project; enable it under Settings $\rightarrow$ Code security when you have dependencies.
+\textbf{Security basics.} Use two-factor authentication (Lecture 6). Never commit passwords, keys or tokens (Lecture 2): history keeps them. \emph{Dependabot} (Settings $\rightarrow$ Code security) can warn you about vulnerable libraries once your project has dependencies.
 \end{pitfall}
 
 \Needspace{12\baselineskip}
@@ -313,19 +308,20 @@ Do the tasks in order. To start over: \code{setup\_hw9.sh --reset} from the cour
 \item[9.1 Clone] Clone the server into \code{hw9} and go in. Set your name and email (\code{git config user.name} ...) if they are not set globally.
 \item[9.2 See the failure] Run \code{bash test.sh}. It prints \code{FAIL}: this is what CI would show as a red cross.
 \item[9.3 Fix it] Correct the typo in \code{greet.sh} so that \code{bash test.sh} prints \code{PASS}.
-\item[9.4 Closing keyword] Commit the fix with a message that has the subject \code{Fix greeting typo} and a second paragraph \code{Closes \#1}: \code{git commit -m "Fix greeting typo" -m "Closes \#1"}.
-\item[9.5 The workflow] Create \code{.github/workflows/ci.yml} (use the example of this lecture: it checks out the code and runs \code{bash test.sh}, on pushes to \code{main} and on pull requests). Spaces only, no tabs. Commit it as \code{Add CI workflow}.
+\item[9.4 Closing keyword] Commit the fix with a message that has the subject \code{Fix greeting typo} and a second paragraph \code{Closes \#1}: \code{git commit -m "Fix greeting typo" -m "Closes \#1"}. (Part B explains why this keyword matters, and a trap it sets.)
+\item[9.5 The workflow] Create \code{.github/workflows/ci.yml} (use the example of this lecture: it checks out the code and runs \code{bash test.sh}, on pushes to \code{main} and on pull requests). Spaces only, no tabs. Commit it as \code{Add CI workflow}. (Part A can only check the file's \emph{words}; wrong indentation is caught by GitHub in Part B.)
 \item[9.6 Templates] Create \code{.github/ISSUE\_TEMPLATE/bug\_report.md} (front matter with \code{name:} and \code{about:}, then at least one \code{\#\#} heading) and \code{.github/pull\_request\_template.md} (with a checklist line \code{- [ ] ...}). Commit them as \code{Add templates}.
 \item[9.7 Tags] Create the \emph{lightweight} tag \code{v0.1.0} on the very first commit (\code{git rev-list --max-parents=0 HEAD} prints its ID) and the \emph{annotated} tag \code{v1.0.0} (message \code{First release}) on your newest commit. Push everything: \code{git push origin main v0.1.0 v1.0.0}.
 \item[9.8 Questions] In \code{practice/hw9\_answers.txt} (next to \code{hw9}; create it with \code{printf} or \code{echo}) write \code{next-bugfix=<version>} (the next version number after fixing another bug in \code{1.0.0}) and \code{issue-closes-when=<opened or merged>} (when does \code{Closes \#12} close issue 12?).
 \end{description}
 
-\textbf{Part B: the real thing on GitHub} (optional, but this is the point). You need your GitHub account and SSH key (Lecture 6).
+\textbf{Part B: the real thing on GitHub} (optional, but strongly recommended: Part A never runs a real CI). You need your GitHub account and SSH key (Lecture 6).
 \begin{description}[leftmargin=1.2em,style=nextline]
-\item[9.9 Publish and watch CI] On GitHub create a new \emph{Public} repository \code{ci-practice} \emph{without} a README. In \code{practice/hw9} run \code{git remote add github <your address>} and \code{git push github main v0.1.0 v1.0.0}. Open the \textbf{Actions} tab: your workflow ran. Add the line \code{repo=<you>/ci-practice} to \code{hw9\_answers.txt}.
-\item[9.10 Issue to pull request to closed issue] \emph{Now} (after the push) create Issue \#1 (use the bug template; title: \emph{Add a note to the README}). In \code{hw9} create a branch \code{readme-note}, add a line to \code{README.md}, commit, and \code{git push github readme-note}. Open a pull request into \code{main} with the description \code{Closes \#1}; wait for the green check; merge it. Issue \#1 should close by itself. Add \code{issue=1} to the answers file. (Create the issue only \emph{after} the first push: the old commit \code{Closes \#1} would otherwise close it at once.)
+\item[9.9 Publish and watch CI] On GitHub create a new \emph{Public} repository \code{ci-practice} with \emph{nothing} ticked (no README, no \code{.gitignore}, no licence). \textbf{Do not create any issue yet.} In \code{practice/hw9} run \code{git remote add github git@github.com:YOURNAME/ci-practice.git} (the SSH address) and \code{git push github main v0.1.0 v1.0.0}. Open the \textbf{Actions} tab: your workflow ran. Add the line \code{repo=<you>/ci-practice} to \code{hw9\_answers.txt}.
+\item[9.10 Issue to pull request to closed issue] \emph{Now} (after the push) create Issue \#1 (use the bug template; title: \emph{Add a note to the README}). In \code{hw9} create a branch \code{readme-note}, add a line to \code{README.md}, commit, and \code{git push github readme-note}. Open a pull request into \code{main} with the description \code{Closes \#1}; wait for the green check; merge it. Issue \#1 should close by itself. Add \code{issue=1} to the answers file. Why the order matters: the commit from 9.4 already contains \code{Closes \#1} and was pushed in 9.9. Had issue \#1 existed at that moment, GitHub would have closed it immediately and your pull request would close nothing.
 \item[9.11 Release] On GitHub open \textbf{Releases $\rightarrow$ Draft a new release}, choose the tag \code{v1.0.0}, press \emph{Generate release notes}, and publish.
-\item[9.12 Explore (not checked)] Under Settings, look at branch protection and GitHub Pages. In Settings you can also protect \code{main} so that CI must pass.
+\item[9.12 Wait for green] After you merge, GitHub starts a new workflow run on \code{main}. Wait until the Actions tab shows it green \emph{before} you run the checker.
+\item[9.13 Explore (not checked)] In Settings $\rightarrow$ Branches (or Rules) add a rule for \code{main} that requires a pull request and the check \code{test}, then try to push to \code{main} directly and see GitHub refuse.
 \end{description}
 
 \textbf{Check yourself:} from the course folder run \code{bash codeHints/L09/check\_hw9.sh}. Part A needs no network. Part B is checked if \code{hw9\_answers.txt} contains \code{repo=}; the checker reads your public repository through GitHub's public interface (your issue, release and latest Actions run) and says so if it cannot reach GitHub. Then compare with the solutions at the end of this lecture.

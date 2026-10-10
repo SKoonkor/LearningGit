@@ -33,24 +33,45 @@ jobs:
         run: bash test.sh
 \end{lstlisting}
 
-Create \code{.github/ISSUE\_TEMPLATE/bug\_report.md} (the front matter with \code{name:} and \code{about:} and the two headings of the lecture) and \code{.github/pull\_request\_template.md} (the heading and the checklist of the lecture). Then:
+Create \code{.github/ISSUE\_TEMPLATE/bug\_report.md} and \code{.github/pull\_request\_template.md}:
 
 \begin{lstlisting}
-$ git add .github
-$ git commit -m "Add CI workflow and templates"
+---
+name: Bug report
+about: Something does not work
+---
+
+## What happened?
+
+## What did you expect?
+\end{lstlisting}
+
+\begin{lstlisting}
+## What does this change?
+
+## Checklist
+- [ ] The tests pass
+- [ ] I read my own diff
+\end{lstlisting}
+
+\begin{lstlisting}
+$ git add .github/workflows
+$ git commit -m "Add CI workflow"
+$ git add .github/ISSUE_TEMPLATE .github/pull_request_template.md
+$ git commit -m "Add templates"
 $ git tag v0.1.0 $(git rev-list --max-parents=0 HEAD)
 $ git tag -a v1.0.0 -m "First release"
 $ git push origin main v0.1.0 v1.0.0
 $ printf 'next-bugfix=1.0.1\nissue-closes-when=merged\n' > ../hw9_answers.txt
 \end{lstlisting}
 
-(Committing the workflow and the templates in two commits, as the task text says, works equally well.)
+(Part A checks only the workflow's words; GitHub reports wrong indentation in Part B.)
 
-\textbf{9.3--9.4.} The checker runs your project's \code{test.sh} on a copy of the server's \code{main}, which is exactly what the workflow does on GitHub. \code{git commit -m ... -m ...} makes the second \code{-m} a separate paragraph of the message; GitHub looks for the keyword and the issue number anywhere in it.
+\textbf{9.3--9.4.} The checker runs your \code{test.sh} on a copy of the server's \code{main}, as the workflow does on GitHub. The second \code{-m} is a separate paragraph of the message; GitHub finds the keyword anywhere in it.
 
-\textbf{9.5.} Without \code{uses: actions/checkout} the virtual machine would have no files, so \code{bash test.sh} would fail. The workflow file must be in \code{.github/workflows} (with an \emph{s}).
+\textbf{9.5.} Without \code{uses: actions/checkout} the machine has no files, so \code{bash test.sh} fails. The folder is \code{.github/workflows} (with an \emph{s}).
 
-\textbf{9.7.} The lightweight tag is a bare name for the first commit; the annotated tag has its own object with your message, so \code{git show v1.0.0} shows a \emph{Tagger}. Tags are only pushed when you name them (or use \code{--tags}).
+\textbf{9.7.} The annotated tag has its own object with your message (\code{git show v1.0.0} shows a \emph{Tagger}). Tags are pushed only when you name them or use \code{--tags}.
 
 \textbf{9.8.} Fixing a bug in \code{1.0.0} gives the patch version \code{1.0.1}. \code{Closes \#12} closes the issue when the change is \emph{merged} into the default branch, not when the pull request is opened.
 
@@ -58,7 +79,7 @@ $ printf 'next-bugfix=1.0.1\nissue-closes-when=merged\n' > ../hw9_answers.txt
 
 \begin{lstlisting}
 (GitHub) New repository: ci-practice, Public, no README
-$ git remote add github git@github.com:YOURNAME/ci-practice.git
+$ git remote add github git@github.com:YOURNAME/ci-practice.git      # the SSH address
 $ git push github main v0.1.0 v1.0.0
 (GitHub) Actions tab: the "CI" workflow ran: green tick
 $ printf 'repo=YOURNAME/ci-practice\n' >> ../hw9_answers.txt
@@ -71,6 +92,7 @@ $ git push github readme-note
 (GitHub) Issue #1 is now closed
 $ printf 'issue=1\n' >> ../hw9_answers.txt
 (GitHub) Releases > Draft a new release > tag v1.0.0 > Generate release notes > Publish
+(GitHub) Actions: wait until the new run on main (after the merge) is green, then run the checker
 \end{lstlisting}
 
 Replace \code{YOURNAME} with your GitHub user name. The checker needs the answers file to contain \code{repo=}, \code{issue=}, and a remote of \code{practice/hw9} that points at that repository. It then asks GitHub's public interface whether the issue is closed, whether a release exists for \code{v1.0.0}, and whether the latest Actions run on \code{main} succeeded. If the last check is red, open the run's log in the Actions tab.
@@ -78,10 +100,10 @@ Replace \code{YOURNAME} with your GitHub user name. The checker needs the answer
 \Needspace{8\baselineskip}
 \textbf{Common mistakes.}
 \begin{itemize}
-  \item A \emph{tab} character in the workflow (the checker reports it) or a folder called \code{.github/workflow} instead of \code{workflows}.
-  \item Creating Issue \#1 \emph{before} the first push: the old commit message \code{Closes \#1} then closes it at once, and the pull request closes nothing. The check passes anyway, but you missed the exercise. Push first, then create the issue.
+  \item A \emph{tab} in the workflow, or a folder \code{.github/workflow} instead of \code{workflows}.
+  \item Creating Issue \#1 \emph{before} the first push: the commit message \code{Closes \#1} then closes it at once, and the pull request closes nothing. Push first, then create the issue.
   \item Forgetting to push the tags: \code{git push origin main} sends no tags.
-  \item Creating the GitHub repository with a README: the first push is rejected because the histories differ. Create it empty.
-  \item A private repository: GitHub's public interface cannot see it, so the checker reports that it cannot find it.
-  \item Writing \code{issue-closes-when=opened}: the issue closes when the change is \emph{merged}.
+  \item Creating the repository with a README: the first push is rejected. Create it empty.
+  \item A private repository: the checker cannot see it and reports ``cannot find''.
+  \item Running the checker while the workflow run on \code{main} is still in progress: the check ``latest run is green'' fails until it finishes. Wait and run it again.
 \end{itemize}
