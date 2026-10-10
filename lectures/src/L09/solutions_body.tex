@@ -54,6 +54,7 @@ about: Something does not work
 - [ ] I read my own diff
 \end{lstlisting}
 
+\Needspace{9\baselineskip}
 \begin{lstlisting}
 $ git add .github/workflows
 $ git commit -m "Add CI workflow"
@@ -78,21 +79,21 @@ $ printf 'next-bugfix=1.0.1\nissue-closes-when=merged\n' > ../hw9_answers.txt
 \textbf{Part B.}
 
 \begin{lstlisting}
-(GitHub) New repository: ci-practice, Public, no README
+9.9  (GitHub) New repository: ci-practice, Public, nothing ticked
 $ git remote add github git@github.com:YOURNAME/ci-practice.git      # the SSH address
 $ git push github main v0.1.0 v1.0.0
-(GitHub) Actions tab: the "CI" workflow ran: green tick
+9.9  (GitHub) Actions tab: the "CI" workflow ran: green tick
 $ printf 'repo=YOURNAME/ci-practice\n' >> ../hw9_answers.txt
-(GitHub) Issues > New issue "Add a note to the README"  -> number 1
+9.10 (GitHub) Issues > New issue "Add a note to the README"  -> number 1
 $ git switch -c readme-note
 $ echo "Notes coming soon." >> README.md
 $ git commit -am "Add a note to the README"
 $ git push github readme-note
-(GitHub) Open the pull request, description "Closes #1"; wait for the green check; Merge
-(GitHub) Issue #1 is now closed
+9.10 (GitHub) Pull request, description "Closes #1"; green check; Merge
+9.10 (GitHub) Issue #1 is now closed
 $ printf 'issue=1\n' >> ../hw9_answers.txt
-(GitHub) Releases > Draft a new release > tag v1.0.0 > Generate release notes > Publish
-(GitHub) Actions: wait until the new run on main (after the merge) is green, then run the checker
+9.11 (GitHub) Releases > Draft a new release > tag v1.0.0 > Generate release notes > Publish
+9.12 (GitHub) Actions: wait until the new run on main (after the merge) is green
 \end{lstlisting}
 
 Replace \code{YOURNAME} with your GitHub user name. The checker needs the answers file to contain \code{repo=}, \code{issue=}, and a remote of \code{practice/hw9} that points at that repository. It then asks GitHub's public interface whether the issue is closed, whether a release exists for \code{v1.0.0}, and whether the latest Actions run on \code{main} succeeded. If the last check is red, open the run's log in the Actions tab.
@@ -105,5 +106,4 @@ Replace \code{YOURNAME} with your GitHub user name. The checker needs the answer
   \item Forgetting to push the tags: \code{git push origin main} sends no tags.
   \item Creating the repository with a README: the first push is rejected. Create it empty.
   \item A private repository: the checker cannot see it and reports ``cannot find''.
-  \item Running the checker while the workflow run on \code{main} is still in progress: the check ``latest run is green'' fails until it finishes. Wait and run it again.
 \end{itemize}

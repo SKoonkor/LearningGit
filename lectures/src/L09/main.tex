@@ -107,6 +107,7 @@ about: Something does not work
 
 and a pull-request template is plain Markdown, for example:
 
+\Needspace{7\baselineskip}
 \begin{lstlisting}
 ## What does this change?
 
@@ -121,7 +122,7 @@ These files are ordinary files: you commit and push them like any other, and the
 
 \textbf{Continuous integration} (CI) means: every time someone pushes, a machine automatically builds and tests the project, and reports the result next to the commit. Nobody forgets to run the tests, and a broken change is caught before it is merged. On GitHub this is done by \textbf{Actions}.
 
-You describe what to run in a \textbf{workflow file}: a text file in the folder \code{.github/workflows/}, written in \textbf{YAML}. Four rules are enough to read it:
+You describe what to run in a \textbf{workflow file}: a text file in the folder \code{.github/workflows/}, written in \textbf{YAML}. A few rules are enough to read it:
 
 \begin{lstlisting}
 fruit: apple          # key: value  (# starts a comment)
@@ -131,6 +132,9 @@ box:                  # a key whose value is the indented lines below it
     - pen             # a list: one item per line, each starting with "- "
     - cup
   tags: [a, b]        # the same kind of list, written on one line
+steps:
+  - name: a           # a list item can hold several keys,
+    run: b            #   lined up under each other
 empty:                # a key with nothing after it: "all", "default" or "yes"
 \end{lstlisting}
 
@@ -151,6 +155,7 @@ jobs:
         run: bash test.sh
 \end{lstlisting}
 
+\Needspace{14\baselineskip}
 Line by line:
 
 \begin{center}
@@ -321,7 +326,8 @@ Do the tasks in order. To start over: \code{setup\_hw9.sh --reset} from the cour
 \item[9.10 Issue to pull request to closed issue] \emph{Now} (after the push) create Issue \#1 (use the bug template; title: \emph{Add a note to the README}). In \code{hw9} create a branch \code{readme-note}, add a line to \code{README.md}, commit, and \code{git push github readme-note}. Open a pull request into \code{main} with the description \code{Closes \#1}; wait for the green check; merge it. Issue \#1 should close by itself. Add \code{issue=1} to the answers file. Why the order matters: the commit from 9.4 already contains \code{Closes \#1} and was pushed in 9.9. Had issue \#1 existed at that moment, GitHub would have closed it immediately and your pull request would close nothing.
 \item[9.11 Release] On GitHub open \textbf{Releases $\rightarrow$ Draft a new release}, choose the tag \code{v1.0.0}, press \emph{Generate release notes}, and publish.
 \item[9.12 Wait for green] After you merge, GitHub starts a new workflow run on \code{main}. Wait until the Actions tab shows it green \emph{before} you run the checker.
-\item[9.13 Explore (not checked)] In Settings $\rightarrow$ Branches (or Rules) add a rule for \code{main} that requires a pull request and the check \code{test}, then try to push to \code{main} directly and see GitHub refuse.
+\Needspace{6\baselineskip}
+\item[9.13 Explore (not checked)] In Settings $\rightarrow$ Rules, use \emph{Add branch ruleset} for \code{main}: require a pull request and the check \code{test}, then try to push to \code{main} directly and see GitHub refuse. (If you use a classic protection rule instead, also tick \emph{Do not allow bypassing the above settings}; otherwise, as the owner, you can still push.)
 \end{description}
 
 \textbf{Check yourself:} from the course folder run \code{bash codeHints/L09/check\_hw9.sh}. Part A needs no network. Part B is checked if \code{hw9\_answers.txt} contains \code{repo=}; the checker reads your public repository through GitHub's public interface (your issue, release and latest Actions run) and says so if it cannot reach GitHub. Then compare with the solutions at the end of this lecture.

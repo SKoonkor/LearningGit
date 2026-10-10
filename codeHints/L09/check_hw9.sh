@@ -78,8 +78,8 @@ else
   check "9.7 v1.0.0 points at a commit on main that contains the fix"       tag_on_fix
   check "9.8 answers: next-bugfix=1.0.1"                                    a_next
   check "9.8 answers: issue-closes-when=merged"                             a_closes
-  check "9.8 the two original commits are untouched"                    seed_kept
-  check "9.8 working directory clean"                                       clean
+  check "general: the two original commits are untouched"                  seed_kept
+  check "general: working directory clean"                                     clean
 fi
 
 # ---------- part B: your real GitHub repository (optional) ----------
@@ -117,7 +117,7 @@ else
           is_issue()     { ! echo "$r" | grep -Eq '^  "pull_request":'; }
           issue_closed() { echo "$r" | grep -Eq '^  "state": *"closed"'; }
           check "9.10 #$num is an issue (not a pull request)" is_issue
-          check "9.10 issue #$num is closed (by your merged pull request)" issue_closed
+          check "9.10 issue #$num is closed" issue_closed
         elif [ "$code" = "404" ]; then
           check "9.10 issue #$num cannot be found in $repo" not_found
         else
