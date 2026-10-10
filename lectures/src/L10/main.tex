@@ -40,7 +40,7 @@ $ git log --oneline
 
 \section{The reflog: Git's flight recorder}
 
-Imagine you want to undo your last two commits and type a command too eagerly:
+Imagine you want to undo your last two commits and type a command too eagerly (\code{git reset} is explained properly in the next section; for now: ``move \code{main} back two commits and make my files match''):
 
 \begin{lstlisting}
 $ git reset --hard HEAD~2
@@ -78,7 +78,7 @@ $ git reflog
 ...
 \end{lstlisting}
 
-(The lines in between are the history of the demo setup.) \code{HEAD@\{1\}} means ``where \code{HEAD} was one move ago'', and the entry just \emph{before} the reset is the state we want back. Two ways to return:
+(The lines in between are the history of the demo setup. A long reflog opens in a pager: press \code{q} to leave it, as in Lecture 3.) Each line reads: \emph{the commit \code{HEAD} was on after this action}, \code{HEAD@\{n\}} (``\code{n} moves ago''), and what happened. So the line \code{6529ff1 HEAD@\{1\}: checkout \ldots} is the position just \emph{before} the reset, which is the state we want back. The numbers shift with every new action, so always look again instead of trusting a remembered number. Two ways to return:
 
 \begin{lstlisting}
 $ git reset --hard HEAD@{1}               # move main back to where it was
@@ -93,8 +93,16 @@ The second form is the safest: it creates a new branch \code{rescue} at the lost
 After any mistake, \emph{stop}, run \code{git reflog}, find the entry from just before the mistake, and put a branch on it (\code{git branch rescue <id>}). That works for deleted branches, bad resets, bad rebases and lost amend commits.
 \end{keyidea}
 
+Three more cases, each with the same recipe:
+
+\begin{itemize}
+  \item \textbf{A branch deleted with \code{-D}} (Lecture 4). Git prints the ID when it deletes: \code{Deleted branch side (was 85a4832).} Bring it back with \code{git branch side 85a4832}. If you missed the line, \code{git reflog} still lists that commit.
+  \item \textbf{An amend that went wrong} (Lecture 3). The reflog has a line such as \code{commit (amend): <new message>}; the line \emph{below} it is the old commit. \code{git branch rescue <old-id>} saves it.
+  \item \textbf{A rebase that went wrong} (Lecture 8). The reflog shows \code{rebase (start)} \ldots{} \code{rebase (finish)}; the entry just below \code{rebase (start)} is your branch before the rebase. Use that ID for \code{git reset --hard <id>} (or, if nothing else happened since, \code{git reset --hard ORIG\_HEAD}).
+\end{itemize}
+
 \begin{quickfact}
-The reflog is local: it is not pushed, and a fresh clone has an empty one. Its entries expire (by default after 90 days, or 30 for commits no branch reaches), after which \code{git gc} may delete the unreachable commits for good. That is why ``find it soon'' is the rule.
+The reflog is local: it is not pushed, and a fresh clone starts with a nearly empty one. (Our practice repositories switch off automatic clean-up, so their reflogs stay complete.) Its entries expire (by default after 90 days, or 30 for commits no branch reaches), after which \code{git gc} (Git's housekeeping command) may delete such \emph{unreachable} commits, those that no branch or tag leads to, for good. That is why ``find it soon'' is the rule.
 \end{quickfact}
 
 \section{\texttt{git reset}: moving the branch}
@@ -115,7 +123,7 @@ You met \code{reset --hard} above. \code{git reset <commit>} always does one thi
 \end{tabular}
 \end{center}
 
-Starting each time from the waffle commit \code{6529ff1}, here is \code{git reset --<mode> HEAD\textasciitilde{}1} with its effect on \code{git status --short}:
+Starting each time from \code{6529ff1}, here is \code{git reset --<mode> HEAD\textasciitilde{}1} and its effect on \code{git status --short}:
 
 \begin{lstlisting}
 $ git reset --soft HEAD~1
@@ -130,12 +138,13 @@ $ git reset --hard 6529ff1
 
 $ git reset --hard HEAD~1
 $ git status --short        # nothing printed: the change is gone from your files too
+$ git reset --hard 6529ff1  # bring the waffle commit back for the next examples
 \end{lstlisting}
 
-(After \code{--hard} the file has one line fewer; the commit itself is still in the reflog.)
+(\code{--mixed} also prints \code{Unstaged changes after reset:} before the status. After \code{--hard} the file has one line fewer; the commit itself is still in the reflog, which is why the last line works.)
 
 \begin{pitfall}
-\textbf{\code{--hard} discards uncommitted work permanently.} Before you use it, run \code{git status} and \code{git diff}. And never reset commits that you have already pushed and shared: that rewrites history under your teammates' feet (the golden rule of Lecture 8). For shared mistakes use \code{git revert} (Lecture 3).
+\textbf{\code{--hard} discards uncommitted work permanently.} Committed work it only moves out of sight (the reflog has it); \emph{uncommitted} changes are gone for good. Before you use it, run \code{git status} and \code{git diff}. And never reset commits that you have already pushed and shared: that rewrites history under your teammates' feet (the golden rule of Lecture 8). For shared mistakes use \code{git revert} (Lecture 3).
 \end{pitfall}
 
 \subsection{Three recipes}
@@ -147,12 +156,12 @@ $ git reset --soft HEAD~3
 $ git commit -m "Add feature"
 \end{lstlisting}
 
-\textbf{Undo a merge or rebase that you have not pushed (\code{ORIG\_HEAD}).} Git remembers where \code{HEAD} was before a dangerous operation (merge, rebase, reset, pull) in the name \code{ORIG\_HEAD}:
+\textbf{Undo a merge or rebase that you have not pushed (\code{ORIG\_HEAD}).} Before a risky operation (merge, rebase, reset, pull) Git sets a bookmark called \code{ORIG\_HEAD} at where \code{HEAD} was. The next such operation overwrites it:
 
 \begin{lstlisting}
 $ git merge --no-edit side
 $ git log --oneline --graph -4
-*   f7f7cbe Merge branch 'side'
+*   f7f7cbe Merge branch 'side'        (your merge ID differs)
 |\
 | * 85a4832 Add sale banner
 * | 6529ff1 Add waffle recipe
@@ -209,7 +218,8 @@ A stash is easy to forget. For anything you will keep for more than a day, \emph
 
 ``It worked last month, and now it is broken.'' Reading hundreds of commits is hopeless. \textbf{Bisect} finds the guilty commit by \emph{binary search}: you tell Git one commit that is good and one that is bad; Git checks out the one in the middle; you say whether it is good or bad; Git halves the range again. Among 1000 commits this takes only about 10 tests.
 
-Our \code{chain} branch has a test script \code{test.sh} that fails once \code{status.txt} contains a line with the word \code{BROKEN}. We know that the first commit (\code{Start chain}, \code{6150894}) is good and the newest (\code{Step 8}) is bad:
+Our \code{chain} branch has a test script \code{test.sh} that fails once \code{status.txt} contains a line with the word \code{BROKEN}. \Needspace{10\baselineskip}
+We know that the first commit (\code{Start chain}, \code{6150894}) is good and the newest (\code{Step 8}) is bad:
 
 \begin{lstlisting}
 $ git switch chain
@@ -253,7 +263,7 @@ $ git bisect reset                # IMPORTANT: leave bisect mode, back to your b
 \end{figure}
 
 \begin{pitfall}
-Always finish with \code{git bisect reset}; until then you are on a temporary, detached state. Bisect needs a \emph{reliable} test (the same result every time), and a commit that cannot be tested at all can be skipped with \code{git bisect skip}.
+Always finish with \code{git bisect reset}; until then you are on a temporary, detached state (Lecture 4). Bisect needs a \emph{reliable} test (the same result every time), and a commit that cannot be tested at all can be skipped with \code{git bisect skip}.
 \end{pitfall}
 
 \section{Under the hood: what is inside \texttt{.git}?}
@@ -263,7 +273,7 @@ You have used Git for ten lectures; now look inside. The hidden folder from Lect
 \begin{lstlisting}
 $ ls .git
 COMMIT_EDITMSG  HEAD  ORIG_HEAD  config  description  hooks  index
-info  logs  objects  packed-refs  refs
+info  logs  objects  refs
 $ cat .git/HEAD
 ref: refs/heads/main
 $ cat .git/refs/heads/main
@@ -272,7 +282,7 @@ $ cat .git/refs/heads/main
 
 \begin{itemize}
   \item \code{HEAD} is a one-line file: ``I am on branch \code{main}'' (Lecture 4's picture, literally).
-  \item A \textbf{branch} is a file containing a commit ID: 40 characters, nothing else. That is why creating a branch costs nothing. (\code{packed-refs} is Git's tidy summary of many such files.)
+  \item A \textbf{branch} is a file containing a commit ID: 40 characters, nothing else. That is why creating a branch costs nothing. (After a clone or a \code{git gc} you may also see a file \code{packed-refs}: Git's tidy summary of many such files, in which case the branch's file can be missing.)
   \item \code{index} is the staging area. \code{logs} is the reflog. \code{config} holds the local settings of Lecture 1. \code{hooks} can hold scripts that Git runs at certain moments.
   \item \code{objects} is the database of everything you ever committed.
 \end{itemize}
@@ -328,10 +338,12 @@ A commit is thus tiny: a tree ID, a parent ID, who and when. The ``snapshot'' of
   \node[obj,fill=green!14] (b0) at (9.4,-1.2) {blob ae5e354\\\scriptsize README.md};
   \node[obj,fill=green!14] (b2) at (9.4,0.5) {blob 0104975\\\scriptsize recipes.txt (3 lines)};
   \node[obj,fill=green!14] (b1) at (9.4,-2.9) {blob (older)\\\scriptsize recipes.txt (2 lines)};
-  \draw[link] (c2)--node[above,font=\tiny]{tree}(t2); \draw[link] (c1)--node[above,font=\tiny]{tree}(t1);
-  \draw[link] (c2)--node[left,font=\tiny]{parent}(c1);
+  \draw[link] (c2)--node[above,font=\scriptsize,text=black]{tree}(t2); \draw[link] (c1)--node[above,font=\scriptsize,text=black]{tree}(t1);
+  \draw[link] (c2)--node[left,font=\scriptsize,text=black]{parent}(c1);
+  \node[branchtag] (mn) at (-2.4,0.9) {main}; \node[headtag] (hd) at (-2.4,1.9) {HEAD};
+  \draw[link] (mn)--(-1.3,0.2); \draw[link] (hd)--(mn);
   \draw[link] (t2)--(b2); \draw[link] (t2)--(b0); \draw[link] (t1)--(b0); \draw[link] (t1)--(b1);
-  \node[font=\scriptsize,text=green!40!black,anchor=west] at (10.9,-1.2) {$\leftarrow$ shared: unchanged files are stored once};
+  \node[font=\scriptsize,text=green!40!black,anchor=north,align=center] at (9.4,-3.6) {both trees point to the same README blob:\\unchanged files are stored only once};
 \end{tikzpicture}
 \caption{Two commits as stored objects. The README did not change, so both trees point to the very same blob.}
 \label{fig:objects}
@@ -354,11 +366,7 @@ This one idea explains much of what you learned:
   \item \emph{Branches are cheap}: just a file with an ID in it.
 \end{itemize}
 
-Objects that nothing points to (the ``lost'' commits of the reflog section) are \emph{unreachable}; \code{git gc} removes them after their reflog entries have expired. Over time Git also packs many loose objects into compact \emph{pack files}, which you rarely need to think about.
-
-\begin{quickfact}
-SHA-1 is slowly being replaced: newer Git versions can create repositories that use SHA-256 (64 characters) instead. Everything in this lecture works the same.
-\end{quickfact}
+Objects that nothing points to (the ``lost'' commits of the reflog section) are \emph{unreachable}; \code{git gc} removes them after their reflog entries have expired. (Git also packs many loose objects into compact \emph{pack files}; newer Git can even use SHA-256 instead of SHA-1: the ideas stay the same, only the IDs differ. You rarely need to think about either.)
 
 \section{Which command for which situation?}
 
@@ -379,7 +387,9 @@ propose a change & branch, push, pull request (7) \\
 tidy my unshared commits & \code{git rebase -i}, \code{reset --soft} (8, 10) \\
 copy one commit & \code{git cherry-pick} (8) \\
 find a lost commit & \code{git reflog}, then \code{git branch rescue <id>} (10) \\
-park unfinished work & \code{git stash push -m} / \code{pop} (10) \\
+park unfinished work & \code{git stash push -m} / \code{pop} / \code{apply} (10) \\
+undo a fresh merge, rebase or reset & \code{git reset --hard ORIG\_HEAD} (10) \\
+look at an old commit & \code{git switch --detach <id>} (4) \\
 find the commit that broke it & \code{git bisect run} (10) \\
 name a version & \code{git tag -a}, release (9) \\
 \bottomrule
@@ -392,10 +402,10 @@ You can now do everything a working developer does with Git every day. To keep g
 
 \begin{itemize}
   \item \textbf{Practise on real projects.} Use Git for your own notes, papers or code from today on. Commit small, read \code{git status} before and after every command, make a branch for every idea.
-  \item \textbf{Contribute.} Look for repositories with the label \emph{good first issue}; the project \code{firstcontributions/first-contributions} on GitHub is a safe first pull request.
-  \item \textbf{Read.} \emph{Pro Git} (free at \url{https://git-scm.com/book}) goes deeper on every topic here; \code{git help <command>} is always at hand.
+  \item \textbf{Contribute.} Look for the label \emph{good first issue}; \code{firstcontributions/first-contributions} on GitHub is a safe first pull request.
+  \item \textbf{Read.} \emph{Pro Git} (free at \url{https://git-scm.com/book}) goes deeper on every topic; \code{git help <command>} is always at hand.
   \item \textbf{Play.} \url{https://learngitbranching.js.org} shows branches and rebases as animated pictures. \url{https://ohshitgit.com} lists rescue recipes for common mistakes. \url{https://skills.github.com} offers short interactive GitHub courses.
-  \item \textbf{Discover more tools:} \code{git blame} (who wrote this line?), \code{git log -S"text"} (when did this text appear?), \code{git worktree}, submodules, Git LFS for large files, signed commits, hooks, and aliases such as \code{git config --global alias.tree "log --oneline --graph --all"}.
+  \item \textbf{Discover more tools:} \code{git blame} (who wrote this line?), \code{git log -S"text"} (when did this text appear?), aliases, hooks, submodules, Git LFS, signed commits.
 \end{itemize}
 
 \begin{keyidea}
@@ -414,11 +424,12 @@ $ cd practice/hw10
 Do the tasks in order. To start over: \code{setup\_hw10.sh --reset} from the course folder. Set your identity (\code{git config user.name} and \code{user.email}) if it is not set globally.
 
 \begin{description}[leftmargin=1.2em,style=nextline]
-\item[10.1 Rescue] On \code{main}, two commits including one called \code{Important work} were lost by a hard reset. Find it with \code{git reflog} and create a branch \code{rescued} that points at it. Do \emph{not} move \code{main}.
+\item[10.1 Rescue] On \code{main}, two commits including one called \code{Important work} were lost by a hard reset. Find it with \code{git reflog} (the reflog is long: press \code{q} to leave the pager, or filter it with \code{git reflog | grep Important}) and create a branch \code{rescued} that points at the commit named exactly \code{Important work} (\code{Start important work} is a different, older commit). Do \emph{not} move \code{main}.
 \item[10.2 Squash] The branch \code{messy} has three commits (\code{wip}, \code{wip 2}, \code{more wip}) on top of \code{main}. Using \code{git reset --soft}, turn them into \emph{one} commit called \code{Add feature} with exactly the same files.
 \item[10.3 Bisect] The branch \code{history} is a chain of 12 commits; a bug appeared at some step. Its first commit (\code{git rev-list --max-parents=0 history}) is good, its newest is bad, and \code{test.sh} in the repository tells good from bad. Use \code{git bisect run bash test.sh} to find the first bad commit, finish with \code{git bisect reset}, and write \code{bad-commit=<first 7 characters of its ID>} in \code{practice/hw10\_answers.txt} (next to \code{hw10}; use \code{printf} or \code{echo}).
+\Needspace{7\baselineskip}
 \item[10.4 Stash] Switch to \code{main}. Append the line \code{work in progress} to \code{notes.txt} and \emph{do not commit}. Now an urgent bug arrives: the branch \code{urgent} has the typo \code{teh} in \code{app.txt}. Shelve your change with \code{git stash}, switch to \code{urgent}, fix the typo, commit it as \code{Fix urgent bug}, switch back to \code{main}, and \code{git stash pop}. At the end \code{git status --short} must show only \code{\ M notes.txt} (a space, then \code{M}) and the stash must be empty.
-\item[10.5 Look inside] On \code{main}, add three lines to the answers file: \code{tree=<first 7 characters of the ID of main's tree>} (use \code{git cat-file -p main}), \code{hello=<first 7 characters of the hash of the text hello>} (use \code{echo hello | git hash-object --stdin}), and \code{ref-file=<first 7 characters stored in .git/refs/heads/main>} (use \code{cat}).
+\item[10.5 Look inside] Add three more lines to the answers file: \code{tree=<first 7 characters of the ID of main's tree>} (use \code{git cat-file -p main}), \code{hello=<first 7 characters of the hash of the text hello>} (use \code{printf 'hello\textbackslash n' | git hash-object --stdin}; run this in Git Bash, other shells may add different line endings), and \code{ref-file=<first 7 characters stored in .git/refs/heads/main>} (use \code{cat}; if the file does not exist, Git has packed it, so use \code{git rev-parse main} instead).
 \end{description}
 
 \textbf{Check yourself:} from the course folder run \code{bash codeHints/L10/check\_hw10.sh}. All \code{PASS}, then compare with the solutions at the end of this lecture (or in \code{solutions/L10/}).
@@ -433,7 +444,7 @@ Do the tasks in order. To start over: \code{setup\_hw10.sh --reset} from the cou
   \item Inside \code{.git}: branches are files holding IDs, commits point to trees, trees to blobs, and every ID is a hash of content.
 \end{itemize}
 
-\textbf{You have finished the course.} From \code{git init} to rebase, pull requests and recovery, you have built a solid foundation. Keep the four habits, keep practising, and enjoy using Git. (Further reading: \emph{Pro Git}, Chapters 7.3 and 10.)
+\textbf{You have finished the course.} In Lecture 0 we started with a folder full of \code{report\_v2\_final\_}\allowbreak\code{REALLY\_final.docx} files and asked for a time machine and a collaboration tool. You now have both: from \code{git init} to rebase, pull requests and recovery. Keep the four habits, keep practising, and enjoy using Git. (\emph{Pro Git}, Chapters 7.3 and 10.)
 
 \solutionspage
 

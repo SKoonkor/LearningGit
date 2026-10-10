@@ -4,7 +4,7 @@
 $ bash codeHints/L10/setup_hw10.sh
 $ cd practice/hw10
 $ git reflog | grep "Important work"            # 10.1
-0b30b44 HEAD@{18}: commit: Important work
+0b30b44 HEAD@{18}: commit: Important work      (your number differs)
 $ git branch rescued 0b30b44                      # use the ID you see
 $ git switch messy                                # 10.2
 $ git reset --soft main
@@ -33,11 +33,12 @@ For 10.5 (the three IDs are examples, yours differ except the hash of \code{hell
 \begin{lstlisting}
 $ git cat-file -p main | head -1
 tree 8cfff4b...
-$ echo hello | git hash-object --stdin
+$ printf 'hello\n' | git hash-object --stdin
 ce013625030ba8dba906f756967f9e9ca394464a
 $ cat .git/refs/heads/main
 1689350...
 $ printf 'bad-commit=e238140\ntree=8cfff4b\nhello=ce01362\nref-file=1689350\n' > ../hw10_answers.txt
+        # (writes all four answer lines at once: bad-commit from 10.3, the rest for 10.5)
 \end{lstlisting}
 
 \textbf{10.1.} The reset moved \code{main} back, but the reflog remembers every position of \code{HEAD}. Your reflog is long because it also contains the history of the setup; \code{grep} finds the line. \code{git branch rescued <id>} only adds a label, so \code{main} stays where it was. (If you used \code{git reset --hard <id>} on \code{main}, the rescue works but \code{main} moved, and the checker complains.)
@@ -56,5 +57,5 @@ $ printf 'bad-commit=e238140\ntree=8cfff4b\nhello=ce01362\nref-file=1689350\n' >
   \item Moving \code{main} to the lost commit in 10.1 instead of creating a branch.
   \item Forgetting \code{git bisect reset}; or running bisect while having uncommitted changes (stash or commit first).
   \item Committing the \code{work in progress} line instead of stashing it in 10.4: then \code{main} has a new commit and the check ``only \code{ M notes.txt}'' fails.
-  \item Writing the \emph{whole} 40-character ID is fine, but the checker also needs at least 7 characters.
+  \item Writing fewer than 7 characters of an ID: write at least 7 (the full 40 are accepted too).
 \end{itemize}

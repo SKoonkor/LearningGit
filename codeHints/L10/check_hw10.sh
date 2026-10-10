@@ -21,10 +21,11 @@ messy_msg()  { [ "$(g log -1 --format=%s messy 2>/dev/null)" = "Add feature" ]; 
 messy_tree() { [ "$(g rev-parse 'messy^{tree}' 2>/dev/null)" = "$(id 6)" ]; }
 messy_old()  { for n in 3 4 5; do ! g merge-base --is-ancestor "$(id $n)" messy 2>/dev/null || return 1; done; }
 bis_ans()    {
-  a="$(ans bad-commit)"; [ "${#a}" -ge 7 ] || return 1
+  a="$(ans bad-commit)"; echo "$a" | grep -Eq '^[0-9a-fA-F]{7,40}$' || return 1
   [ "$(g rev-parse --verify -q "$a^{commit}" 2>/dev/null)" = "$(id 8)" ]
 }
-bis_done()   { [ ! -f "$HW/.git/BISECT_LOG" ] && [ ! -f "$HW/.git/BISECT_START" ]; }
+bis_done()   { [ ! -f "$(g rev-parse --git-path BISECT_LOG)" ] && [ ! -f "$(g rev-parse --git-path BISECT_START)" ]; }
+main_clean() { [ "$(g rev-parse main)" = "$(id 1)" ]; }
 urg_one()    { [ "$(g rev-list --count main..urgent 2>/dev/null)" = "1" ]; }
 urg_msg()    { [ "$(g log -1 --format=%s urgent 2>/dev/null)" = "Fix urgent bug" ]; }
 urg_fixed()  { [ "$(g show urgent:app.txt 2>/dev/null | tr -d '\r')" = "run the app" ]; }
@@ -32,9 +33,9 @@ on_main()    { [ "$(g symbolic-ref --short -q HEAD)" = "main" ]; }
 stash_gone() { [ -z "$(g stash list)" ] && [ -z "$(g rev-parse --verify -q refs/stash)" ]; }
 wip_back()   { grep -q 'work in progress' "$HW/notes.txt" 2>/dev/null; }
 status_ok()  { [ "$(g status --short | grep -v -e '\.DS_Store' -e 'Thumbs\.db')" = " M notes.txt" ]; }
-a_tree()     { a="$(lc "$(ans tree)")"; [ "${#a}" -ge 7 ] && [ "$(g rev-parse main^{tree})" != "" ] && case "$(g rev-parse 'main^{tree}')" in "$a"*) true;; *) false;; esac; }
-a_hello()    { a="$(lc "$(ans hello)")"; [ "${#a}" -ge 7 ] && case "ce013625030ba8dba906f756967f9e9ca394464a" in "$a"*) true;; *) false;; esac; }
-a_ref()      { a="$(lc "$(ans ref-file)")"; [ "${#a}" -ge 7 ] && case "$(g rev-parse main)" in "$a"*) true;; *) false;; esac; }
+a_tree()     { a="$(lc "$(ans tree)")"; echo "$a" | grep -Eq '^[0-9a-f]{7,40}$' && case "$(g rev-parse 'main^{tree}')" in "$a"*) true;; *) false;; esac; }
+a_hello()    { a="$(lc "$(ans hello)")"; echo "$a" | grep -Eq '^[0-9a-f]{7,40}$' && case "ce013625030ba8dba906f756967f9e9ca394464a" in "$a"*) true;; *) false;; esac; }
+a_ref()      { a="$(lc "$(ans ref-file)")"; echo "$a" | grep -Eq '^[0-9a-f]{7,40}$' && case "$(g rev-parse main)" in "$a"*) true;; *) false;; esac; }
 
 echo "Homework 10 checks (folder: $HW)"
 if ! repo_ok; then
@@ -53,6 +54,7 @@ else
   check "10.4 it is called 'Fix urgent bug' and app.txt says 'run the app'" urg_msg
   check "10.4 app.txt on urgent is fixed"                                  urg_fixed
   check "10.4 you are back on main"                                        on_main
+  check "10.4 main has no new commit (the work in progress was not committed)" main_clean
   check "10.4 the stash is empty (popped)"                                 stash_gone
   check "10.4 your 'work in progress' line is back in notes.txt, uncommitted" wip_back
   check "10.4 git status shows only: ' M notes.txt'"                       status_ok

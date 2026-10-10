@@ -18,6 +18,11 @@ git config user.name "Practice User"
 git config user.email "practice@example.com"
 git config core.autocrlf false
 git config commit.gpgsign false
+# the fixed commit dates above also date the reflog entries; keep them from expiring
+# (and from being cleaned up by an automatic gc) so the recovery exercises always work
+git config gc.auto 0
+git config gc.reflogExpire never
+git config gc.reflogExpireUnreachable never
 
 commit() {  # commit "message" "date"
   GIT_AUTHOR_DATE="$2" GIT_COMMITTER_DATE="$2" git commit -q -m "$1"
